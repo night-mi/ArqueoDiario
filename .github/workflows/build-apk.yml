@@ -1,0 +1,106 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build web application
+      run: npm run build
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'adopt'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Sync Capacitor
+      run: |
+        npx cap copy android
+        npx cap sync android
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x android/gradlew
+
+    - name: Build Android APK
+      run: |
+        cd android
+        ./gradlew assembleDebug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: arqueos-gasolinera-apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+
+    - name: Create Release
+      if: github.ref == 'refs/heads/main'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        release_name: Arqueos Gasolinera v1.0.${{ github.run_number }}
+        body: |
+          ## 📱 Aplicación de Arqueos para Gasolinera
+          
+          ### Características:
+          - ✅ Flujo paso a paso guiado
+          - ✅ Formularios detallados para arqueo de euros
+          - ✅ Validación automática de diferencias
+          - ✅ Informes completos por turnos
+          - ✅ Funciona offline
+          
+          ### Instalación:
+          1. Descargar el archivo APK
+          2. Permitir instalación de fuentes desconocidas en Android
+          3. Instalar la aplicación
+          
+          ### Compatibilidad:
+          - Android 7.0 (API 24) o superior
+          - Funciona en tablets y teléfonos
+        draft: false
+        prerelease: false
+
+    - name: Upload Release APK
+      if: github.ref == 'refs/heads/main'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: android/app/build/outputs/apk/debug/app-debug.apk
+        asset_name: arqueos-gasolinera.apk
+        asset_content_type: application/vnd.android.package-archive

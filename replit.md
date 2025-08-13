@@ -95,5 +95,20 @@ The application uses several key design patterns:
 - **ESBuild**: JavaScript bundler for production builds
 - **PostCSS**: CSS processing with Autoprefixer
 
+## Mobile Application (APK) Configuration
+
+The application has been configured with **Capacitor 7.4.2** to generate Android APK files:
+
+- **App Configuration**: `capacitor.config.ts` with app ID `com.gasolinera.arqueos`
+- **Android Project**: Complete Android project generated in `android/` directory
+- **Build Scripts**: Automated build scripts for local and CI/CD compilation
+- **GitHub Actions**: Automated APK generation workflow configured
+- **Mobile Optimization**: Responsive design optimized for touch interfaces
+
+### APK Generation Options
+1. **GitHub Actions**: Automated compilation on code push
+2. **Local Compilation**: Using Android Studio and Gradle
+3. **CI/CD Services**: Ionic Appflow, CodeMagic, or Bitrise
+
 ## Production Considerations
-The application is designed to easily transition from the current in-memory storage to a full PostgreSQL database by implementing the existing `IStorage` interface with Drizzle ORM queries.
+The application is designed to easily transition from the current in-memory storage to a full PostgreSQL database by implementing the existing `IStorage` interface with Drizzle ORM queries. The mobile application maintains full offline functionality with local data persistence.
