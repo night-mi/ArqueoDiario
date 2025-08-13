@@ -103,14 +103,22 @@ export function generateByDatePDF(data: PDFReportData): void {
   doc.text(`Responsable: ${data.auditorName}`, 20, 35);
   doc.text(`Botes Procesados: ${data.cashBoxes.length}`, 20, 45);
   
-  let currentY = 65;
+  // Get unique dates from cash boxes
+  const uniqueDates = [...new Set(data.cashBoxes.map(box => box.date))].sort();
+  doc.text(`Fechas incluidas: ${uniqueDates.join(', ')}`, 20, 55);
+  
+  let currentY = 75;
   
   // Section 1: Grouping by dates and shifts
   doc.setFontSize(14);
   doc.text('DESGLOSE POR FECHAS Y TURNOS', 20, currentY);
   currentY += 20;
   
-  Object.entries(groupedData).forEach(([date, shifts]) => {
+  // Sort dates to process them in chronological order
+  const sortedDates = Object.keys(groupedData).sort();
+  
+  sortedDates.forEach(date => {
+    const shifts = groupedData[date];
     // Date header
     doc.setFontSize(13);
     doc.text(`FECHA: ${date}`, 25, currentY);

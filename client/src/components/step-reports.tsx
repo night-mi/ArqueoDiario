@@ -56,8 +56,9 @@ export default function StepReports() {
   };
 
   const handleExportPDF = (reportType: 'boxes' | 'date') => {
+    // For date reports, use a generic date since we're grouping by individual box dates
     const reportData: PDFReportData = {
-      date: validCashBoxes[0]?.date || new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0], // Current date for report generation
       auditorName: state.auditorName,
       cashBoxes: validCashBoxes,
       totalVales,
