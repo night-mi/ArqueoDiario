@@ -216,8 +216,7 @@ export default function StepReports() {
           <div class="header">
             <h1>ARQUEO DE CAJA POR BOTES</h1>
             <div class="company">
-              <div>Estación de Servicio El Alto</div>
-              <div>SAVICMASA SL - CIF: B80548027</div>
+              <div>Informe de Reconciliación</div>
             </div>
           </div>
           
@@ -443,8 +442,7 @@ export default function StepReports() {
           <div class="header">
             <h1>ARQUEO DE CAJA POR FECHA</h1>
             <div class="company">
-              <div>Estación de Servicio El Alto</div>
-              <div>SAVICMASA SL - CIF: B80548027</div>
+              <div>Informe Consolidado por Fechas</div>
             </div>
           </div>
           
