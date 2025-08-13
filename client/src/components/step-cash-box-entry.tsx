@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -64,7 +64,23 @@ export default function StepCashBoxEntry() {
     mode: "onChange"
   });
 
-  // Remove this line as the total is now calculated in CashBreakdownForm
+  // Reset form when cash box index changes
+  useEffect(() => {
+    const resetValues = state.cashBoxes[state.currentCashBoxIndex] || {
+      date: getCurrentDate(),
+      workerName: "",
+      shift: 1,
+      valeAmount: 0,
+      breakdown: {
+        "500": 0, "200": 0, "100": 0, "50": 0, "20": 0, "10": 0,
+        "5": 0, "2": 0, "1": 0, "0.50": 0, "0.20": 0, "0.10": 0,
+        "0.05": 0, "0.02": 0, "0.01": 0
+      }
+    };
+    
+    form.reset(resetValues);
+    setShowCustomWorker(false); // Reset custom worker state too
+  }, [state.currentCashBoxIndex, form]);
 
   const handlePrevious = () => {
     if (state.currentCashBoxIndex > 0) {
