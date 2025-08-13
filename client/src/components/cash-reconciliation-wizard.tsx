@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { X, User, Edit3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { HomeButton } from "@/components/home-button";
+
 
 export default function CashReconciliationWizard() {
   const { state, dispatch } = useReconciliation();
@@ -79,7 +79,6 @@ export default function CashReconciliationWizard() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <HomeButton variant="reset" showText={false} />
               <div className="text-right">
                 {!isEditingUser ? (
                   <>

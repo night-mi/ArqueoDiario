@@ -5,18 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, ExternalLink, FileText, Calendar, Calculator, Printer, Save, History } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileText, Calendar, Calculator, Printer } from "lucide-react";
 import { DENOMINATIONS, calculateBreakdownTotal } from "@/lib/denominations";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
-// PDF functionality removed - using window reports instead
 
 export default function StepReports() {
   const { state, dispatch } = useReconciliation();
   const { toast } = useToast();
   const [activeReport, setActiveReport] = useState("by-boxes");
-  const queryClient = useQueryClient();
 
   const handlePrevious = () => {
     dispatch({ type: "SET_CURRENT_STEP", payload: 4 });
@@ -25,133 +21,6 @@ export default function StepReports() {
   const handleReset = () => {
     if (confirm("¿Deseas iniciar un nuevo arqueo? Se perderán todos los datos actuales.")) {
       dispatch({ type: "RESET" });
-    }
-  };
-
-  // Save reconciliation mutation (updated to also save reports)
-  const saveReconciliationMutation = useMutation({
-    mutationFn: async () => {
-      const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
-      
-      if (validCashBoxes.length === 0) {
-        throw new Error("No hay botes válidos para guardar");
-      }
-
-      if (!state.auditorName.trim()) {
-        throw new Error("Debe seleccionar un auditor antes de guardar");
-      }
-
-      // Create session data
-      const sessionData = {
-        sessionDate: new Date().toISOString().split('T')[0], // Today's date
-        auditorName: state.auditorName,
-        totalCashBoxes: validCashBoxes.length,
-        totalVales: totalVales.toString(),
-        totalBreakdown: totalBreakdown.toString(),
-        difference: difference.toString(),
-        status: "completed" as const,
-        notes: `Arqueo completado con ${validCashBoxes.length} botes`
-      };
-
-      // Create cash boxes data
-      const cashBoxesData = validCashBoxes.map(box => ({
-        date: box.date,
-        workerName: box.workerName,
-        shift: box.shift,
-        valeAmount: box.valeAmount.toString(),
-        breakdown: JSON.stringify(box.breakdown || {}),
-        totalBreakdown: calculateBreakdownTotal(box.breakdown || {}).toString()
-      }));
-
-      // Save the reconciliation first
-      const response = await fetch('/api/history/complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session: sessionData,
-          cashBoxes: cashBoxesData
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save reconciliation');
-      }
-
-      const result = await response.json();
-      const sessionId = result.session.id;
-
-      // Generate and save both reports (we'll use the existing functions for now)
-      const byCashBoxReport = generateReportByBoxes(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
-      const byDateReport = generateReportByDate(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
-
-      // Save by cash box report
-      await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          reportType: 'by_cash_box',
-          reportTitle: `Informe por Botes - ${sessionData.sessionDate}`,
-          reportContent: byCashBoxReport
-        })
-      });
-
-      // Save by date report  
-      await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          reportType: 'by_date',
-          reportTitle: `Informe por Fecha - ${sessionData.sessionDate}`,
-          reportContent: byDateReport
-        })
-      });
-
-      return result;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Arqueo guardado",
-        description: "El arqueo se ha guardado correctamente en el historial.",
-      });
-      // Invalidate history queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/history'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error al guardar",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
-
-  const handleSaveReconciliation = () => {
-    const { validCashBoxes } = calculateTotals();
-    
-    if (validCashBoxes.length === 0) {
-      toast({
-        title: "No hay datos para guardar",
-        description: "Completa al menos un bote antes de guardar el arqueo.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!state.auditorName.trim()) {
-      toast({
-        title: "Falta auditor",
-        description: "Debe seleccionar un auditor antes de guardar el arqueo.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (confirm("¿Deseas guardar este arqueo en el historial?")) {
-      saveReconciliationMutation.mutate();
     }
   };
 
@@ -177,7 +46,7 @@ export default function StepReports() {
     validCashBoxes.forEach(box => {
       if (box.breakdown) {
         Object.entries(box.breakdown).forEach(([denom, count]) => {
-          totalBreakdown[denom] = (totalBreakdown[denom] || 0) + (count || 0);
+          totalBreakdown[denom] = (totalBreakdown[denom] || 0) + (Number(count) || 0);
         });
       }
     });
@@ -192,6 +61,15 @@ export default function StepReports() {
       toast({
         title: "No hay datos",
         description: "No hay botes válidos para generar el informe.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!state.auditorName.trim()) {
+      toast({
+        title: "Falta auditor",
+        description: "Debe seleccionar un auditor antes de generar el informe.",
         variant: "destructive"
       });
       return;
@@ -268,8 +146,8 @@ export default function StepReports() {
             border-radius: 6px; 
             border-left: 4px solid #3498db;
           }
-          .info-card label { font-size: 12px; color: #7f8c8d; text-transform: uppercase; }
-          .info-card value { font-size: 16px; font-weight: 600; color: #2c3e50; }
+          .info-card .label { font-size: 12px; color: #7f8c8d; text-transform: uppercase; }
+          .info-card .value { font-size: 16px; font-weight: 600; color: #2c3e50; }
           .summary { 
             background: #ecf0f1; 
             padding: 20px; 
@@ -308,8 +186,6 @@ export default function StepReports() {
             vertical-align: top;
           }
           tbody tr:hover { background: #f8f9fa; }
-          .breakdown { font-size: 11px; line-height: 1.4; }
-          .breakdown-item { margin: 2px 0; }
           .status.ok { color: #27ae60; font-weight: 600; }
           .status.warning { color: #f39c12; font-weight: 600; }
           .print-btn { 
@@ -666,7 +542,6 @@ export default function StepReports() {
       </body>
       </html>
     `;
-
   };
 
   const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
@@ -678,128 +553,94 @@ export default function StepReports() {
   const renderByBoxesReport = () => (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-900">Total Vales</p>
-              <p className="text-2xl font-bold text-blue-600">€{totalVales.toFixed(2)}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Vales</p>
+                <p className="text-2xl font-bold">€{totalVales.toFixed(2)}</p>
+              </div>
+              <FileText className="h-8 w-8 text-blue-600" />
             </div>
-            <FileText className="text-blue-400 h-8 w-8" />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-green-900">Total Arqueo</p>
-              <p className="text-2xl font-bold text-green-600">€{totalBreakdown.toFixed(2)}</p>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Contado</p>
+                <p className="text-2xl font-bold">€{totalBreakdown.toFixed(2)}</p>
+              </div>
+              <Calculator className="h-8 w-8 text-green-600" />
             </div>
-            <Calculator className="text-green-400 h-8 w-8" />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className={`border rounded-lg p-4 ${
-          Math.abs(difference) > 0.01 
-            ? "bg-orange-50 border-orange-200" 
-            : "bg-green-50 border-green-200"
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${
-                Math.abs(difference) > 0.01 ? "text-orange-900" : "text-green-900"
-              }`}>Diferencia</p>
-              <p className={`text-2xl font-bold ${
-                Math.abs(difference) > 0.01 ? "text-orange-600" : "text-green-600"
-              }`}>€{difference.toFixed(2)}</p>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Diferencia</p>
+                <p className={`text-2xl font-bold ${difference === 0 ? 'text-green-600' : difference > 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                  {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
+                </p>
+              </div>
+              <div className={`p-2 rounded-full ${difference === 0 ? 'bg-green-100' : difference > 0 ? 'bg-blue-100' : 'bg-red-100'}`}>
+                <span className="text-xl">{difference === 0 ? '✓' : difference > 0 ? '+' : '-'}</span>
+              </div>
             </div>
-            <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-              Math.abs(difference) > 0.01 ? "bg-orange-200" : "bg-green-200"
-            }`}>
-              {Math.abs(difference) > 0.01 ? "⚠" : "✓"}
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Cash Boxes Table */}
       <Card>
-        <CardContent className="p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Detalle por Botes</h4>
+        <CardContent className="pt-6">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Bote</TableHead>
+                <tr>
+                  <TableHead className="w-20">Bote</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Trabajador</TableHead>
-                  <TableHead>Turno</TableHead>
-                  <TableHead>Vale (€)</TableHead>
-                  <TableHead>Arqueo (€)</TableHead>
-                  <TableHead>Desglose del Arqueo</TableHead>
-                  <TableHead>Diferencia (€)</TableHead>
-                  <TableHead>Estado</TableHead>
-                </TableRow>
+                  <TableHead className="w-24">Turno</TableHead>
+                  <TableHead className="text-right w-32">Vale</TableHead>
+                  <TableHead className="text-right w-32">Contado</TableHead>
+                  <TableHead className="text-right w-32">Diferencia</TableHead>
+                  <TableHead className="w-24">Estado</TableHead>
+                </tr>
               </TableHeader>
               <TableBody>
                 {validCashBoxes.map((box, index) => {
                   const boxTotal = calculateBreakdownTotal(box.breakdown || {});
                   const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
-                  const hasDiscrepancy = Math.abs(boxDifference) > 0.01;
-                  
-                  // Get breakdown with only non-zero values
-                  const nonZeroBreakdown = Object.entries(box.breakdown || {})
-                    .filter(([_, count]) => (count || 0) > 0)
-                    .map(([denomination, count]) => {
-                      const denom = DENOMINATIONS.find(d => d.value === denomination);
-                      const value = (count || 0) * parseFloat(denomination);
-                      return {
-                        label: denom?.label || denomination,
-                        count: count || 0,
-                        value: value
-                      };
-                    })
-                    .sort((a, b) => {
-                      const valueA = parseFloat(a.label.replace('€', '').replace(' cént.', ''));
-                      const valueB = parseFloat(b.label.replace('€', '').replace(' cént.', ''));
-                      return valueB - valueA;
-                    });
-                  
+                  const isOk = Math.abs(boxDifference) < 0.01;
+
                   return (
-                    <TableRow key={index}>
+                    <tr key={index}>
                       <TableCell className="font-medium">#{index + 1}</TableCell>
-                      <TableCell>{box.date}</TableCell>
+                      <TableCell>{new Date(box.date).toLocaleDateString('es-ES')}</TableCell>
                       <TableCell>{box.workerName}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {box.shift === 1 ? "Mañana" : "Tarde"}
+                        <Badge variant={box.shift === 1 ? "default" : "secondary"}>
+                          {box.shift === 1 ? 'Mañana' : 'Tarde'}
                         </Badge>
                       </TableCell>
-                      <TableCell>€{(Number(box.valeAmount) || 0).toFixed(2)}</TableCell>
-                      <TableCell className="font-semibold">€{boxTotal.toFixed(2)}</TableCell>
-                      <TableCell className="max-w-xs">
-                        {nonZeroBreakdown.length > 0 ? (
-                          <div className="text-xs space-y-1">
-                            {nonZeroBreakdown.map((item, idx) => (
-                              <div key={idx} className="flex justify-between">
-                                <span className="text-gray-600">{item.label}:</span>
-                                <span className="font-medium">{item.count} = €{item.value.toFixed(2)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 text-xs">Sin desglose</span>
-                        )}
-                      </TableCell>
-                      <TableCell className={hasDiscrepancy ? "text-orange-600" : "text-green-600"}>
-                        €{boxDifference.toFixed(2)}
+                      <TableCell className="text-right font-mono">€{(Number(box.valeAmount) || 0).toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-mono">€{boxTotal.toFixed(2)}</TableCell>
+                      <TableCell className={`text-right font-mono ${
+                        isOk ? 'text-green-600' : boxDifference > 0 ? 'text-blue-600' : 'text-red-600'
+                      }`}>
+                        {boxDifference > 0 ? '+' : ''}€{boxDifference.toFixed(2)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={hasDiscrepancy ? "destructive" : "default"}>
-                          {hasDiscrepancy ? "Con diferencias" : "Correcto"}
+                        <Badge variant={isOk ? "default" : "destructive"}>
+                          {isOk ? '✓ OK' : '⚠ Diff'}
                         </Badge>
                       </TableCell>
-                    </TableRow>
+                    </tr>
                   );
                 })}
               </TableBody>
@@ -811,8 +652,7 @@ export default function StepReports() {
   );
 
   const renderByDateReport = () => {
-    // Group cash boxes by date
-    const groupedByDate: Record<string, any[]> = {};
+    const groupedByDate: Record<string, typeof validCashBoxes> = {};
     validCashBoxes.forEach(box => {
       if (!groupedByDate[box.date]) {
         groupedByDate[box.date] = [];
@@ -824,258 +664,231 @@ export default function StepReports() {
 
     return (
       <div className="space-y-6">
-        {/* Global Summary */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900">
-                  Informe Consolidado por Fechas
-                </h4>
-                <p className="text-sm text-gray-600">
-                  Responsable: {state.auditorName} | {validCashBoxes.length} botes procesados | {sortedDates.length} fechas
-                </p>
-              </div>
-              <Calendar className="text-primary h-8 w-8" />
-            </div>
-
-            {/* Global Totals */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">Total Botes</p>
-                <p className="text-xl font-bold text-gray-900">{validCashBoxes.length}</p>
-              </div>
-              <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-600">Total Vales</p>
-                <p className="text-xl font-bold text-blue-900">€{totalVales.toFixed(2)}</p>
-              </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <p className="text-sm text-green-600">Total Arqueo</p>
-                <p className="text-xl font-bold text-green-900">€{totalBreakdown.toFixed(2)}</p>
-              </div>
-              <div className={`text-center p-3 rounded-lg ${
-                Math.abs(difference) > 0.01 ? "bg-orange-50" : "bg-green-50"
-              }`}>
-                <p className={`text-sm ${Math.abs(difference) > 0.01 ? "text-orange-600" : "text-green-600"}`}>
-                  Diferencia Total
-                </p>
-                <p className={`text-xl font-bold ${Math.abs(difference) > 0.01 ? "text-orange-900" : "text-green-900"}`}>
-                  €{difference.toFixed(2)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Date-by-Date Breakdown */}
-        {sortedDates.map(date => {
-          const dateCashBoxes = groupedByDate[date];
-          
-          // Group by shift
-          const shift1Boxes = dateCashBoxes.filter(box => box.shift === 1);
-          const shift2Boxes = dateCashBoxes.filter(box => box.shift === 2);
-          
-          // Calculate totals for this date
-          const dateTotalVales = dateCashBoxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
-          const dateTotalArqueo = dateCashBoxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
-          const dateDifference = dateTotalArqueo - dateTotalVales;
-          
-          // Calculate breakdown for this date (only non-zero values)
-          const dateBreakdown: Record<string, number> = {};
-          dateCashBoxes.forEach(box => {
-            if (box.breakdown) {
-              Object.entries(box.breakdown).forEach(([denom, count]) => {
-                const numCount = Number(count) || 0;
-                if (numCount > 0) {
-                  dateBreakdown[denom] = (dateBreakdown[denom] || 0) + numCount;
-                }
-              });
-            }
-          });
-
-          const nonZeroDateBreakdown = Object.entries(dateBreakdown)
-            .filter(([_, count]) => count > 0)
-            .map(([denomination, count]) => {
-              const denom = DENOMINATIONS.find(d => d.value === denomination);
-              const value = count * parseFloat(denomination);
-              return {
-                label: denom?.label || denomination,
-                count,
-                value,
-                denomination: parseFloat(denomination)
-              };
-            })
-            .sort((a, b) => b.denomination - a.denomination);
-
-          return (
-            <Card key={date} className="border-2 border-blue-200">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 border-b-2 border-gray-300 pb-2">
-                  FECHA: {date}
-                </h3>
-                
-                {/* Shift 1 */}
-                {shift1Boxes.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-blue-800 mb-3">
-                      TURNO 1 (Mañana) ({shift1Boxes.length} botes)
-                    </h4>
-                    <div className="ml-4 space-y-2">
-                      {shift1Boxes.map((box, index) => {
-                        const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-                        const valeAmount = Number(box.valeAmount) || 0;
-                        return (
-                          <div key={index} className="text-sm">
-                            <span className="font-medium">{box.workerName}</span>: 
-                            <span className="ml-2">Vale €{valeAmount.toFixed(2)} + Arqueo €{boxTotal.toFixed(2)}</span>
-                          </div>
-                        );
-                      })}
-                      <div className="font-semibold text-blue-700 mt-2 pt-2 border-t border-blue-200">
-                        TOTAL TURNO 1: Vales €{shift1Boxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0).toFixed(2)} | 
-                        Arqueo €{shift1Boxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0).toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Shift 2 */}
-                {shift2Boxes.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-orange-800 mb-3">
-                      TURNO 2 (Tarde) ({shift2Boxes.length} botes)
-                    </h4>
-                    <div className="ml-4 space-y-2">
-                      {shift2Boxes.map((box, index) => {
-                        const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-                        const valeAmount = Number(box.valeAmount) || 0;
-                        return (
-                          <div key={index} className="text-sm">
-                            <span className="font-medium">{box.workerName}</span>: 
-                            <span className="ml-2">Vale €{valeAmount.toFixed(2)} + Arqueo €{boxTotal.toFixed(2)}</span>
-                          </div>
-                        );
-                      })}
-                      <div className="font-semibold text-orange-700 mt-2 pt-2 border-t border-orange-200">
-                        TOTAL TURNO 2: Vales €{shift2Boxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0).toFixed(2)} | 
-                        Arqueo €{shift2Boxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0).toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Date Total */}
-                <div className="bg-gray-100 p-4 rounded-lg mb-4">
-                  <div className="font-bold text-lg text-gray-900">
-                    TOTAL {date}: Vales €{dateTotalVales.toFixed(2)} | Arqueo €{dateTotalArqueo.toFixed(2)} | 
-                    Diferencia €{dateDifference.toFixed(2)}
-                  </div>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Vales</p>
+                  <p className="text-2xl font-bold">€{totalVales.toFixed(2)}</p>
                 </div>
+                <FileText className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
 
-                {/* Date Breakdown - Only fields with values */}
-                {nonZeroDateBreakdown.length > 0 && (
-                  <div className="border-t pt-4">
-                    <h5 className="font-semibold text-gray-800 mb-3">Arqueo Combinado - {date}</h5>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {nonZeroDateBreakdown.map((item, index) => (
-                        <div key={index} className="bg-green-50 p-2 rounded text-sm">
-                          <div className="font-medium text-green-800">{item.label}</div>
-                          <div className="text-green-600">{item.count} unidades = €{item.value.toFixed(2)}</div>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Contado</p>
+                  <p className="text-2xl font-bold">€{totalBreakdown.toFixed(2)}</p>
+                </div>
+                <Calculator className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Diferencia</p>
+                  <p className={`text-2xl font-bold ${difference === 0 ? 'text-green-600' : difference > 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                    {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
+                  </p>
+                </div>
+                <Calendar className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Date-based breakdown */}
+        <div className="space-y-6">
+          {sortedDates.map(date => {
+            const dateCashBoxes = groupedByDate[date];
+            const shift1Boxes = dateCashBoxes.filter(box => box.shift === 1);
+            const shift2Boxes = dateCashBoxes.filter(box => box.shift === 2);
+            
+            const dateTotalVales = dateCashBoxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
+            const dateTotalArqueo = dateCashBoxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
+            const dateDifference = dateTotalArqueo - dateTotalVales;
+
+            return (
+              <Card key={date}>
+                <CardContent className="pt-6">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      {new Date(date).toLocaleDateString('es-ES', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {shift1Boxes.length > 0 && (
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+                          <span>🌅</span>
+                          Turno Mañana ({shift1Boxes.length} botes)
+                        </h4>
+                        <div className="space-y-2">
+                          {shift1Boxes.map((box, index) => {
+                            const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+                            const valeAmount = Number(box.valeAmount) || 0;
+                            const boxDiff = boxTotal - valeAmount;
+                            
+                            return (
+                              <div key={index} className="flex justify-between text-sm">
+                                <span className="font-medium">{box.workerName}</span>
+                                <span className={`font-mono ${boxDiff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  €{valeAmount.toFixed(2)} → €{boxTotal.toFixed(2)} 
+                                  ({boxDiff > 0 ? '+' : ''}€{boxDiff.toFixed(2)})
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
-                      ))}
-                    </div>
-                    <div className="mt-3 font-semibold text-green-800">
-                      Total Arqueo Combinado: €{nonZeroDateBreakdown.reduce((sum, item) => sum + item.value, 0).toFixed(2)}
+                      </div>
+                    )}
+
+                    {shift2Boxes.length > 0 && (
+                      <div className="bg-orange-50 p-4 rounded-lg">
+                        <h4 className="font-medium text-orange-900 mb-3 flex items-center gap-2">
+                          <span>🌙</span>
+                          Turno Tarde ({shift2Boxes.length} botes)
+                        </h4>
+                        <div className="space-y-2">
+                          {shift2Boxes.map((box, index) => {
+                            const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+                            const valeAmount = Number(box.valeAmount) || 0;
+                            const boxDiff = boxTotal - valeAmount;
+                            
+                            return (
+                              <div key={index} className="flex justify-between text-sm">
+                                <span className="font-medium">{box.workerName}</span>
+                                <span className={`font-mono ${boxDiff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  €{valeAmount.toFixed(2)} → €{boxTotal.toFixed(2)} 
+                                  ({boxDiff > 0 ? '+' : ''}€{boxDiff.toFixed(2)})
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t bg-gray-50 p-4 rounded-lg">
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <p className="text-sm text-gray-600">Total Vales</p>
+                        <p className="font-bold text-blue-600">€{dateTotalVales.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Total Arqueo</p>
+                        <p className="font-bold text-green-600">€{dateTotalArqueo.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Diferencia</p>
+                        <p className={`font-bold ${dateDifference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {dateDifference > 0 ? '+' : ''}€{dateDifference.toFixed(2)}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     );
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Informes de Arqueo</h3>
-          <p className="text-gray-600">Selecciona el tipo de informe que deseas generar</p>
-        </div>
-        <div className="flex space-x-3">
-          <Button 
-            type="button"
-            variant="outline"
-            onClick={handlePrevious}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
-          </Button>
-          
-          <Button 
-            onClick={handleSaveReconciliation} 
-            disabled={saveReconciliationMutation.isPending}
-            variant="default"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {saveReconciliationMutation.isPending ? "Guardando..." : "Guardar Arqueo"}
-          </Button>
-
-          <Link href="/history">
-            <Button variant="outline">
-              <History className="mr-2 h-4 w-4" />
-              Ver Historial
-            </Button>
-          </Link>
-          
-          <Button onClick={handleReset} variant="outline">
-            Nuevo Arqueo
-          </Button>
+          <h2 className="text-2xl font-bold">Informes y Reportes</h2>
+          <p className="text-gray-600">Genera informes detallados del arqueo de caja</p>
         </div>
       </div>
 
-      <Tabs value={activeReport} onValueChange={setActiveReport}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="by-boxes">Informe por Botes</TabsTrigger>
-          <TabsTrigger value="by-date">Informe por Fecha</TabsTrigger>
-        </TabsList>
+      {validCashBoxes.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No hay datos para mostrar</h3>
+              <p className="text-gray-600">Completa al menos un bote de caja para ver los informes.</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Report Type Tabs */}
+          <Tabs value={activeReport} onValueChange={setActiveReport} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="by-boxes">Informe por Botes</TabsTrigger>
+              <TabsTrigger value="by-date">Informe por Fecha</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="by-boxes" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h4 className="text-md font-medium text-gray-800">Resumen por Botes Individuales</h4>
-            <div className="flex gap-2">
-              <Button onClick={() => handlePrint("boxes")} size="sm" variant="outline">
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimir
+            <TabsContent value="by-boxes" className="space-y-4">
+              {renderByBoxesReport()}
+            </TabsContent>
+
+            <TabsContent value="by-date" className="space-y-4">
+              {renderByDateReport()}
+            </TabsContent>
+          </Tabs>
+
+          {/* Action Buttons */}
+          <div className="flex justify-between pt-6 border-t">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Anterior
+            </Button>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => handleOpenReport('boxes')}
+                className="flex items-center gap-2"
+                disabled={validCashBoxes.length === 0 || !state.auditorName.trim()}
+              >
+                <Printer className="h-4 w-4" />
+                Imprimir por Botes
               </Button>
-              <Button onClick={() => handleOpenReport("boxes")} size="sm">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Ver Informe
+              <Button
+                onClick={() => handleOpenReport('date')}
+                className="flex items-center gap-2"
+                disabled={validCashBoxes.length === 0 || !state.auditorName.trim()}
+              >
+                <Printer className="h-4 w-4" />
+                Imprimir por Fecha
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleReset}
+                className="flex items-center gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Nuevo Arqueo
               </Button>
             </div>
           </div>
-          {renderByBoxesReport()}
-        </TabsContent>
-
-        <TabsContent value="by-date" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h4 className="text-md font-medium text-gray-800">Informe Consolidado por Fecha</h4>
-            <div className="flex gap-2">
-              <Button onClick={() => handlePrint("date")} size="sm" variant="outline">
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimir
-              </Button>
-              <Button onClick={() => handleOpenReport("date")} size="sm">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Ver Informe
-              </Button>
-            </div>
-          </div>
-          {renderByDateReport()}
-        </TabsContent>
-      </Tabs>
+        </>
+      )}
     </div>
   );
 }
