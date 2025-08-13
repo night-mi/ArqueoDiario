@@ -228,110 +228,200 @@ export default function StepReports() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Informe de Arqueo por Botes</title>
+        <title>Arqueo de Caja - Estación de Servicio El Alto</title>
+        <meta charset="UTF-8">
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          h1 { text-align: center; margin-bottom: 30px; }
-          h2 { border-bottom: 2px solid #333; padding-bottom: 5px; }
-          .header-info { margin-bottom: 20px; }
-          .summary { background-color: #f5f5f5; padding: 15px; margin: 20px 0; }
-          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; font-weight: bold; }
-          .total-row { background-color: #e8f4f8; font-weight: bold; }
-          .print-button { margin: 20px 0; text-align: center; }
-          .print-button button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-          @media print { .print-button { display: none; } }
-          .footer { margin-top: 30px; font-size: 12px; text-align: center; }
-          .print-button { 
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.5; 
+            color: #2c3e50;
+            background: #f8f9fa;
+            padding: 20px;
+          }
+          .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 8px; 
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          }
+          .header { 
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            color: white; 
+            padding: 30px; 
+            text-align: center;
+          }
+          .header h1 { font-size: 24px; margin-bottom: 10px; }
+          .header .company { font-size: 16px; opacity: 0.9; }
+          .content { padding: 30px; }
+          .info-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px;
+          }
+          .info-card { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 6px; 
+            border-left: 4px solid #3498db;
+          }
+          .info-card label { font-size: 12px; color: #7f8c8d; text-transform: uppercase; }
+          .info-card value { font-size: 16px; font-weight: 600; color: #2c3e50; }
+          .summary { 
+            background: #ecf0f1; 
+            padding: 20px; 
+            border-radius: 6px; 
+            margin-bottom: 30px;
+          }
+          .summary-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 20px; 
+            text-align: center;
+          }
+          .summary-item { background: white; padding: 15px; border-radius: 6px; }
+          .summary-item .amount { font-size: 20px; font-weight: bold; }
+          .summary-item.positive .amount { color: #27ae60; }
+          .summary-item.negative .amount { color: #e74c3c; }
+          .summary-item.neutral .amount { color: #3498db; }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+          }
+          th { 
+            background: #34495e; 
+            color: white; 
+            padding: 15px 10px; 
+            font-weight: 600; 
+            font-size: 14px;
+          }
+          td { 
+            padding: 12px 10px; 
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: top;
+          }
+          tbody tr:hover { background: #f8f9fa; }
+          .breakdown { font-size: 11px; line-height: 1.4; }
+          .breakdown-item { margin: 2px 0; }
+          .status.ok { color: #27ae60; font-weight: 600; }
+          .status.warning { color: #f39c12; font-weight: 600; }
+          .print-btn { 
             position: fixed; 
             top: 20px; 
             right: 20px; 
-            background-color: #2563eb; 
+            background: #3498db; 
             color: white; 
             border: none; 
-            padding: 10px 20px; 
-            border-radius: 5px; 
+            padding: 12px 20px; 
+            border-radius: 25px; 
             cursor: pointer; 
             font-size: 14px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            z-index: 1000;
           }
-          .print-button:hover { background-color: #1d4ed8; }
+          .print-btn:hover { background: #2980b9; }
           @media print { 
-            body { margin: 0; } 
-            .print-button { display: none; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; }
+            .print-btn { display: none; }
           }
         </style>
-        <script>
-          function printReport() {
-            window.print();
-          }
-        </script>
       </head>
       <body>
-        <button class="print-button" onclick="printReport()">🖨️ Imprimir</button>
-        <h1>INFORME DE ARQUEO POR BOTES</h1>
-        
-        <div class="header-info">
-          <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-ES')}</p>
-          <p><strong>Responsable:</strong> ${auditorName}</p>
-          <p><strong>Total de Botes:</strong> ${cashBoxes.length}</p>
-        </div>
+        <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
+        <div class="container">
+          <div class="header">
+            <h1>ARQUEO DE CAJA POR BOTES</h1>
+            <div class="company">
+              <div>Estación de Servicio El Alto</div>
+              <div>SAVICMASA SL - CIF: B80548027</div>
+            </div>
+          </div>
+          
+          <div class="content">
+            <div class="info-grid">
+              <div class="info-card">
+                <div class="label">Fecha del Informe</div>
+                <div class="value">${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+              </div>
+              <div class="info-card">
+                <div class="label">Responsable</div>
+                <div class="value">${auditorName}</div>
+              </div>
+              <div class="info-card">
+                <div class="label">Total de Botes</div>
+                <div class="value">${cashBoxes.length}</div>
+              </div>
+            </div>
 
-        <div class="summary">
-          <h2>RESUMEN GENERAL</h2>
-          <p><strong>Total Vales:</strong> €${totalVales.toFixed(2)}</p>
-          <p><strong>Total Arqueo:</strong> €${totalBreakdown.toFixed(2)}</p>
-          <p><strong>Diferencia:</strong> €${difference.toFixed(2)}</p>
-        </div>
+            <div class="summary">
+              <h3 style="margin-bottom: 15px; color: #2c3e50;">Resumen General</h3>
+              <div class="summary-grid">
+                <div class="summary-item neutral">
+                  <div class="label">Total Vales</div>
+                  <div class="amount">€${totalVales.toFixed(2)}</div>
+                </div>
+                <div class="summary-item neutral">
+                  <div class="label">Total Contado</div>
+                  <div class="amount">€${totalBreakdown.toFixed(2)}</div>
+                </div>
+                <div class="summary-item ${difference === 0 ? 'positive' : difference > 0 ? 'positive' : 'negative'}">
+                  <div class="label">Diferencia</div>
+                  <div class="amount">${difference > 0 ? '+' : ''}€${difference.toFixed(2)}</div>
+                </div>
+              </div>
+            </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Bote</th>
-              <th>Fecha</th>
-              <th>Trabajador</th>
-              <th>Turno</th>
-              <th>Vale</th>
-              <th>Arqueo</th>
-              <th>Desglose del Arqueo</th>
-              <th>Diferencia</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${cashBoxes.map((box, index) => {
-              const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-              const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
-              
-              // Get breakdown with only non-zero values for print
-              const nonZeroBreakdown = Object.entries(box.breakdown || {})
-                .filter(([_, count]) => (Number(count) || 0) > 0)
-                .map(([denomination, count]) => {
-                  const denom = DENOMINATIONS.find(d => d.value === denomination);
-                  const value = (Number(count) || 0) * parseFloat(denomination);
-                  return `${denom?.label || denomination}: ${count} = €${value.toFixed(2)}`;
-                }).join('<br>');
-              
-              return `
+            <table>
+              <thead>
                 <tr>
-                  <td>Bote ${index + 1}</td>
-                  <td>${box.date}</td>
-                  <td>${box.workerName}</td>
-                  <td>${box.shift === 1 ? 'Mañana' : 'Tarde'}</td>
-                  <td>€${(Number(box.valeAmount) || 0).toFixed(2)}</td>
-                  <td>€${boxTotal.toFixed(2)}</td>
-                  <td style="font-size: 11px;">${nonZeroBreakdown || 'Sin desglose'}</td>
-                  <td>€${boxDifference.toFixed(2)}</td>
-                  <td>${Math.abs(boxDifference) > 0.01 ? 'Con diferencias' : 'Correcto'}</td>
+                  <th style="width: 60px;">Bote</th>
+                  <th>Fecha</th>
+                  <th>Trabajador</th>
+                  <th style="width: 80px;">Turno</th>
+                  <th style="width: 90px;">Vale</th>
+                  <th style="width: 90px;">Contado</th>
+                  <th style="width: 90px;">Diferencia</th>
+                  <th style="width: 80px;">Estado</th>
                 </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-
-        <div class="footer">
-          <p>Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}</p>
+              </thead>
+              <tbody>
+                ${cashBoxes.map((box, index) => {
+                  const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+                  const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
+                  const isOk = Math.abs(boxDifference) < 0.01;
+                  
+                  return `
+                    <tr>
+                      <td style="text-align: center; font-weight: 600;">#${index + 1}</td>
+                      <td>${new Date(box.date).toLocaleDateString('es-ES')}</td>
+                      <td style="font-weight: 500;">${box.workerName}</td>
+                      <td style="text-align: center;">
+                        <span style="padding: 2px 8px; background: ${box.shift === 1 ? '#e3f2fd' : '#fff3e0'}; border-radius: 12px; font-size: 12px;">
+                          ${box.shift === 1 ? 'Mañana' : 'Tarde'}
+                        </span>
+                      </td>
+                      <td style="text-align: right; font-weight: 500;">€${(Number(box.valeAmount) || 0).toFixed(2)}</td>
+                      <td style="text-align: right; font-weight: 500;">€${boxTotal.toFixed(2)}</td>
+                      <td style="text-align: right; color: ${isOk ? '#27ae60' : boxDifference > 0 ? '#2980b9' : '#e74c3c'}; font-weight: 600;">
+                        ${boxDifference > 0 ? '+' : ''}€${boxDifference.toFixed(2)}
+                      </td>
+                      <td style="text-align: center;">
+                        <span class="status ${isOk ? 'ok' : 'warning'}">${isOk ? '✓' : '⚠'}</span>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
         </div>
       </body>
       </html>
@@ -350,155 +440,233 @@ export default function StepReports() {
 
     const sortedDates = Object.keys(groupedByDate).sort();
 
-    let dateContent = '';
-    
-    sortedDates.forEach(date => {
-      const dateCashBoxes = groupedByDate[date];
-      
-      // Group by shift
-      const shift1Boxes = dateCashBoxes.filter(box => box.shift === 1);
-      const shift2Boxes = dateCashBoxes.filter(box => box.shift === 2);
-      
-      // Calculate totals for this date
-      const dateTotalVales = dateCashBoxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
-      const dateTotalArqueo = dateCashBoxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
-      const dateDifference = dateTotalArqueo - dateTotalVales;
-      
-      // Calculate breakdown for this date (only non-zero values)
-      const dateBreakdown: Record<string, number> = {};
-      dateCashBoxes.forEach(box => {
-        if (box.breakdown) {
-          Object.entries(box.breakdown).forEach(([denom, count]) => {
-            const numCount = Number(count) || 0;
-            if (numCount > 0) {
-              dateBreakdown[denom] = (dateBreakdown[denom] || 0) + numCount;
-            }
-          });
-        }
-      });
-
-      const nonZeroDateBreakdown = Object.entries(dateBreakdown)
-        .filter(([_, count]) => count > 0)
-        .map(([denomination, count]) => {
-          const denom = DENOMINATIONS.find(d => d.value === denomination);
-          const value = count * parseFloat(denomination);
-          return {
-            label: denom?.label || denomination,
-            count,
-            value,
-            denomination: parseFloat(denomination)
-          };
-        })
-        .sort((a, b) => b.denomination - a.denomination);
-
-      dateContent += `
-        <div class="date-section">
-          <h3>FECHA: ${date}</h3>
-      `;
-      
-      // Shift 1
-      if (shift1Boxes.length > 0) {
-        dateContent += `<h4>TURNO 1 (Mañana) (${shift1Boxes.length} botes):</h4><ul>`;
-        shift1Boxes.forEach((box) => {
-          const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-          const valeAmount = Number(box.valeAmount) || 0;
-          dateContent += `<li><strong>${box.workerName}</strong>: Vale €${valeAmount.toFixed(2)} + Arqueo €${boxTotal.toFixed(2)}</li>`;
-        });
-        const shift1TotalVales = shift1Boxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
-        const shift1TotalArqueo = shift1Boxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
-        dateContent += `</ul><p><strong>TOTAL TURNO 1: Vales €${shift1TotalVales.toFixed(2)} | Arqueo €${shift1TotalArqueo.toFixed(2)}</strong></p>`;
-      }
-      
-      // Shift 2
-      if (shift2Boxes.length > 0) {
-        dateContent += `<h4>TURNO 2 (Tarde) (${shift2Boxes.length} botes):</h4><ul>`;
-        shift2Boxes.forEach((box) => {
-          const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-          const valeAmount = Number(box.valeAmount) || 0;
-          dateContent += `<li><strong>${box.workerName}</strong>: Vale €${valeAmount.toFixed(2)} + Arqueo €${boxTotal.toFixed(2)}</li>`;
-        });
-        const shift2TotalVales = shift2Boxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
-        const shift2TotalArqueo = shift2Boxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
-        dateContent += `</ul><p><strong>TOTAL TURNO 2: Vales €${shift2TotalVales.toFixed(2)} | Arqueo €${shift2TotalArqueo.toFixed(2)}</strong></p>`;
-      }
-      
-      dateContent += `<p class="date-total"><strong>TOTAL ${date}: Vales €${dateTotalVales.toFixed(2)} | Arqueo €${dateTotalArqueo.toFixed(2)} | Diferencia €${dateDifference.toFixed(2)}</strong></p>`;
-      
-      // Add breakdown for this date
-      if (nonZeroDateBreakdown.length > 0) {
-        dateContent += `<div class="breakdown-section"><h5>Arqueo Combinado - ${date}</h5><ul>`;
-        nonZeroDateBreakdown.forEach(item => {
-          dateContent += `<li>${item.label}: ${item.count} unidades = €${item.value.toFixed(2)}</li>`;
-        });
-        dateContent += `</ul><p><strong>Total Arqueo Combinado: €${nonZeroDateBreakdown.reduce((sum, item) => sum + item.value, 0).toFixed(2)}</strong></p></div>`;
-      }
-      
-      dateContent += `</div>`;
-    });
-
     return `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Informe de Arqueo por Fecha</title>
+        <title>Arqueo de Caja por Fecha - Estación de Servicio El Alto</title>
+        <meta charset="UTF-8">
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          h1 { text-align: center; margin-bottom: 30px; }
-          h2, h3 { border-bottom: 2px solid #333; padding-bottom: 5px; }
-          h4 { color: #555; margin: 15px 0 5px 20px; }
-          .header-info { margin-bottom: 20px; }
-          .date-section { margin: 20px 0; padding: 15px; border: 2px solid #2563eb; }
-          .date-total { background-color: #e8f4f8; padding: 10px; font-weight: bold; }
-          .breakdown-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; }
-          h5 { color: #059669; margin-bottom: 10px; }
-          ul { margin: 5px 0 10px 40px; }
-          li { margin: 5px 0; }
-          .footer { margin-top: 30px; font-size: 12px; text-align: center; }
-          .print-button { 
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.4; 
+            color: #2c3e50;
+            background: #f8f9fa;
+            padding: 20px;
+          }
+          .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 8px; 
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          }
+          .header { 
+            background: linear-gradient(135deg, #27ae60 0%, #2c3e50 100%);
+            color: white; 
+            padding: 30px; 
+            text-align: center;
+          }
+          .header h1 { font-size: 24px; margin-bottom: 10px; }
+          .header .company { font-size: 16px; opacity: 0.9; }
+          .content { padding: 30px; }
+          .summary { 
+            background: #ecf0f1; 
+            padding: 20px; 
+            border-radius: 6px; 
+            margin-bottom: 30px;
+            text-align: center;
+          }
+          .summary-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px; 
+            margin-top: 15px;
+          }
+          .summary-item { background: white; padding: 12px; border-radius: 6px; }
+          .summary-item .amount { font-size: 18px; font-weight: bold; }
+          .summary-item.positive .amount { color: #27ae60; }
+          .summary-item.negative .amount { color: #e74c3c; }
+          .summary-item.neutral .amount { color: #3498db; }
+          .date-section { 
+            margin-bottom: 30px; 
+            border: 1px solid #ecf0f1; 
+            border-radius: 6px; 
+            overflow: hidden;
+          }
+          .date-header { 
+            background: #34495e; 
+            color: white; 
+            padding: 15px; 
+            font-size: 18px; 
+            font-weight: 600;
+          }
+          .date-content { padding: 20px; }
+          .shift-section { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 4px;
+          }
+          .shift-title { 
+            font-weight: 600; 
+            color: #2c3e50; 
+            margin-bottom: 10px; 
+            font-size: 16px;
+          }
+          .worker-line { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 6px 0; 
+            border-bottom: 1px solid #e9ecef;
+          }
+          .worker-line:last-child { border-bottom: none; }
+          .worker-name { font-weight: 500; }
+          .amounts { color: #7f8c8d; font-size: 14px; }
+          .date-totals { 
+            background: #e8f4f8; 
+            padding: 15px; 
+            border-radius: 4px; 
+            margin-top: 15px;
+          }
+          .totals-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px; 
+            text-align: center;
+          }
+          .total-item .label { font-size: 12px; color: #7f8c8d; }
+          .total-item .value { font-size: 16px; font-weight: 600; }
+          .print-btn { 
             position: fixed; 
             top: 20px; 
             right: 20px; 
-            background-color: #2563eb; 
+            background: #27ae60; 
             color: white; 
             border: none; 
-            padding: 10px 20px; 
-            border-radius: 5px; 
+            padding: 12px 20px; 
+            border-radius: 25px; 
             cursor: pointer; 
             font-size: 14px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            z-index: 1000;
           }
-          .print-button:hover { background-color: #1d4ed8; }
+          .print-btn:hover { background: #229954; }
           @media print { 
-            body { margin: 0; } 
-            .print-button { display: none; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; }
+            .print-btn { display: none; }
           }
         </style>
-        <script>
-          function printReport() {
-            window.print();
-          }
-        </script>
       </head>
       <body>
-        <button class="print-button" onclick="printReport()">🖨️ Imprimir</button>
-        <h1>INFORME DE ARQUEO POR FECHA</h1>
-        
-        <div class="header-info">
-          <p><strong>Responsable:</strong> ${auditorName}</p>
-          <p><strong>Botes Procesados:</strong> ${cashBoxes.length}</p>
-          <p><strong>Fechas incluidas:</strong> ${sortedDates.join(', ')}</p>
-          <p><strong>Total General:</strong> Vales €${totalVales.toFixed(2)} | Arqueo €${totalBreakdown.toFixed(2)} | Diferencia €${difference.toFixed(2)}</p>
-        </div>
+        <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
+        <div class="container">
+          <div class="header">
+            <h1>ARQUEO DE CAJA POR FECHA</h1>
+            <div class="company">
+              <div>Estación de Servicio El Alto</div>
+              <div>SAVICMASA SL - CIF: B80548027</div>
+            </div>
+          </div>
+          
+          <div class="content">
+            <div class="summary">
+              <h3 style="margin-bottom: 10px; color: #2c3e50;">Resumen Total del Período</h3>
+              <div style="font-size: 14px; color: #7f8c8d;">Responsable: ${auditorName} | Generado: ${new Date().toLocaleDateString('es-ES')}</div>
+              <div class="summary-grid">
+                <div class="summary-item neutral">
+                  <div class="label">Total Vales</div>
+                  <div class="amount">€${totalVales.toFixed(2)}</div>
+                </div>
+                <div class="summary-item neutral">
+                  <div class="label">Total Contado</div>
+                  <div class="amount">€${totalBreakdown.toFixed(2)}</div>
+                </div>
+                <div class="summary-item ${difference === 0 ? 'positive' : difference > 0 ? 'positive' : 'negative'}">
+                  <div class="label">Diferencia</div>
+                  <div class="amount">${difference > 0 ? '+' : ''}€${difference.toFixed(2)}</div>
+                </div>
+              </div>
+            </div>
 
-        <h2>DESGLOSE POR FECHAS Y TURNOS</h2>
-        ${dateContent}
-
-        <div class="footer">
-          <p>Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}</p>
+            ${sortedDates.map(date => {
+              const dateCashBoxes = groupedByDate[date];
+              const shift1Boxes = dateCashBoxes.filter(box => box.shift === 1);
+              const shift2Boxes = dateCashBoxes.filter(box => box.shift === 2);
+              
+              const dateTotalVales = dateCashBoxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
+              const dateTotalArqueo = dateCashBoxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
+              const dateDifference = dateTotalArqueo - dateTotalVales;
+              
+              return `
+                <div class="date-section">
+                  <div class="date-header">
+                    ${new Date(date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </div>
+                  <div class="date-content">
+                    ${shift1Boxes.length > 0 ? `
+                      <div class="shift-section">
+                        <div class="shift-title">🌅 Turno Mañana (${shift1Boxes.length} botes)</div>
+                        ${shift1Boxes.map(box => {
+                          const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+                          const valeAmount = Number(box.valeAmount) || 0;
+                          const boxDiff = boxTotal - valeAmount;
+                          return `
+                            <div class="worker-line">
+                              <span class="worker-name">${box.workerName}</span>
+                              <span class="amounts">Vale: €${valeAmount.toFixed(2)} | Contado: €${boxTotal.toFixed(2)} | <span style="color: ${boxDiff >= 0 ? '#27ae60' : '#e74c3c'}">${boxDiff > 0 ? '+' : ''}€${boxDiff.toFixed(2)}</span></span>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    ` : ''}
+                    
+                    ${shift2Boxes.length > 0 ? `
+                      <div class="shift-section">
+                        <div class="shift-title">🌙 Turno Tarde (${shift2Boxes.length} botes)</div>
+                        ${shift2Boxes.map(box => {
+                          const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+                          const valeAmount = Number(box.valeAmount) || 0;
+                          const boxDiff = boxTotal - valeAmount;
+                          return `
+                            <div class="worker-line">
+                              <span class="worker-name">${box.workerName}</span>
+                              <span class="amounts">Vale: €${valeAmount.toFixed(2)} | Contado: €${boxTotal.toFixed(2)} | <span style="color: ${boxDiff >= 0 ? '#27ae60' : '#e74c3c'}">${boxDiff > 0 ? '+' : ''}€${boxDiff.toFixed(2)}</span></span>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    ` : ''}
+                    
+                    <div class="date-totals">
+                      <div class="totals-grid">
+                        <div class="total-item">
+                          <div class="label">Vales del Día</div>
+                          <div class="value">€${dateTotalVales.toFixed(2)}</div>
+                        </div>
+                        <div class="total-item">
+                          <div class="label">Arqueo del Día</div>
+                          <div class="value">€${dateTotalArqueo.toFixed(2)}</div>
+                        </div>
+                        <div class="total-item">
+                          <div class="label">Diferencia</div>
+                          <div class="value" style="color: ${dateDifference >= 0 ? '#27ae60' : '#e74c3c'}">${dateDifference > 0 ? '+' : ''}€${dateDifference.toFixed(2)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
         </div>
       </body>
       </html>
     `;
+
   };
 
   const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
