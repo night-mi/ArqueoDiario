@@ -265,13 +265,22 @@ export default function StepReports() {
                   <th style="width: 90px;">Contado</th>
                   <th style="width: 90px;">Diferencia</th>
                   <th style="width: 80px;">Estado</th>
+                  <th>Detalle Arqueo</th>
                 </tr>
               </thead>
               <tbody>
-                ${cashBoxes.map((box, index) => {
+                ${cashBoxes
+                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                  .map((box, index) => {
                   const boxTotal = calculateBreakdownTotal(box.breakdown || {});
                   const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
                   const isOk = Math.abs(boxDifference) < 0.01;
+                  
+                  // Generate breakdown details for values > 0
+                  const breakdownDetails = DENOMINATIONS
+                    .filter(denom => (box.breakdown && box.breakdown[denom.value] > 0))
+                    .map(denom => `${denom.label}: ${box.breakdown[denom.value]}`)
+                    .join(', ');
                   
                   return `
                     <tr>
@@ -291,6 +300,7 @@ export default function StepReports() {
                       <td style="text-align: center;">
                         <span class="status ${isOk ? 'ok' : 'warning'}">${isOk ? '✓' : '⚠'}</span>
                       </td>
+                      <td style="font-size: 11px; color: #7f8c8d;">${breakdownDetails || 'Sin detalle'}</td>
                     </tr>
                   `;
                 }).join('')}
@@ -304,7 +314,7 @@ export default function StepReports() {
   };
 
   const generateReportByDate = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number, auditorName: string) => {
-    // Group cash boxes by date
+    // Group cash boxes by date and worker
     const groupedByDate: Record<string, any[]> = {};
     cashBoxes.forEach(box => {
       if (!groupedByDate[box.date]) {
@@ -388,17 +398,35 @@ export default function StepReports() {
           .shift-title { 
             font-weight: 600; 
             color: #2c3e50; 
-            margin-bottom: 10px; 
+            margin-bottom: 12px; 
             font-size: 16px;
+            background: linear-gradient(45deg, #f1f3f4, #e8eaf6);
+            padding: 10px 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
           }
           .worker-line { 
             display: flex; 
             justify-content: space-between; 
-            padding: 6px 0; 
-            border-bottom: 1px solid #e9ecef;
+            align-items: center;
+            padding: 10px 15px; 
+            margin: 6px 0;
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 50%, #f8f9fa 100%);
+            border-radius: 6px;
+            border-left: 3px solid #27ae60;
           }
           .worker-line:last-child { border-bottom: none; }
           .worker-name { font-weight: 500; }
+          .worker-amount { 
+            font-weight: 600; 
+            color: #27ae60; 
+            font-family: monospace; 
+            background: linear-gradient(45deg, #d4edda, #c3e6cb); 
+            padding: 4px 10px; 
+            border-radius: 15px; 
+            font-size: 13px;
+            border: 1px solid #b8dacc;
+          }
           .amounts { color: #7f8c8d; font-size: 14px; }
           .date-totals { 
             background: #e8f4f8; 
@@ -486,12 +514,10 @@ export default function StepReports() {
                         <div class="shift-title">🌅 Turno Mañana (${shift1Boxes.length} botes)</div>
                         ${shift1Boxes.map(box => {
                           const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-                          const valeAmount = Number(box.valeAmount) || 0;
-                          const boxDiff = boxTotal - valeAmount;
                           return `
                             <div class="worker-line">
                               <span class="worker-name">${box.workerName}</span>
-                              <span class="amounts">Vale: €${valeAmount.toFixed(2)} | Contado: €${boxTotal.toFixed(2)} | <span style="color: ${boxDiff >= 0 ? '#27ae60' : '#e74c3c'}">${boxDiff > 0 ? '+' : ''}€${boxDiff.toFixed(2)}</span></span>
+                              <span class="worker-amount">€${boxTotal.toFixed(2)}</span>
                             </div>
                           `;
                         }).join('')}
@@ -503,12 +529,10 @@ export default function StepReports() {
                         <div class="shift-title">🌙 Turno Tarde (${shift2Boxes.length} botes)</div>
                         ${shift2Boxes.map(box => {
                           const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-                          const valeAmount = Number(box.valeAmount) || 0;
-                          const boxDiff = boxTotal - valeAmount;
                           return `
                             <div class="worker-line">
                               <span class="worker-name">${box.workerName}</span>
-                              <span class="amounts">Vale: €${valeAmount.toFixed(2)} | Contado: €${boxTotal.toFixed(2)} | <span style="color: ${boxDiff >= 0 ? '#27ae60' : '#e74c3c'}">${boxDiff > 0 ? '+' : ''}€${boxDiff.toFixed(2)}</span></span>
+                              <span class="worker-amount">€${boxTotal.toFixed(2)}</span>
                             </div>
                           `;
                         }).join('')}
@@ -516,18 +540,10 @@ export default function StepReports() {
                     ` : ''}
                     
                     <div class="date-totals">
-                      <div class="totals-grid">
-                        <div class="total-item">
-                          <div class="label">Vales del Día</div>
-                          <div class="value">€${dateTotalVales.toFixed(2)}</div>
-                        </div>
-                        <div class="total-item">
-                          <div class="label">Arqueo del Día</div>
-                          <div class="value">€${dateTotalArqueo.toFixed(2)}</div>
-                        </div>
-                        <div class="total-item">
-                          <div class="label">Diferencia</div>
-                          <div class="value" style="color: ${dateDifference >= 0 ? '#27ae60' : '#e74c3c'}">${dateDifference > 0 ? '+' : ''}€${dateDifference.toFixed(2)}</div>
+                      <div class="total-simple">
+                        <div class="total-row">
+                          <span class="total-label">Total del Día</span>
+                          <span class="total-amount">€${dateTotalArqueo.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -550,42 +566,45 @@ export default function StepReports() {
 
   const renderByBoxesReport = () => (
     <div className="space-y-6">
-      {/* Summary Cards */}
+      {/* Summary Cards with Color Bands */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-blue-400 to-blue-600"></div>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Vales</p>
-                <p className="text-2xl font-bold">€{totalVales.toFixed(2)}</p>
+                <p className="text-sm font-medium text-blue-700">Total Vales</p>
+                <p className="text-2xl font-bold text-blue-800">€{totalVales.toFixed(2)}</p>
               </div>
-              <FileText className="h-8 w-8 text-blue-600" />
+              <FileText className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-green-400 to-emerald-600"></div>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Contado</p>
-                <p className="text-2xl font-bold">€{totalBreakdown.toFixed(2)}</p>
+                <p className="text-sm font-medium text-green-700">Total Contado</p>
+                <p className="text-2xl font-bold text-green-800">€{totalBreakdown.toFixed(2)}</p>
               </div>
-              <Calculator className="h-8 w-8 text-green-600" />
+              <Calculator className="h-8 w-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
+          <div className={`h-2 bg-gradient-to-r ${difference === 0 ? 'from-teal-400 to-cyan-600' : difference > 0 ? 'from-purple-400 to-indigo-600' : 'from-red-400 to-pink-600'}`}></div>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Diferencia</p>
-                <p className={`text-2xl font-bold ${difference === 0 ? 'text-green-600' : difference > 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                <p className={`text-sm font-medium ${difference === 0 ? 'text-teal-700' : difference > 0 ? 'text-purple-700' : 'text-red-700'}`}>Diferencia</p>
+                <p className={`text-2xl font-bold ${difference === 0 ? 'text-teal-800' : difference > 0 ? 'text-purple-800' : 'text-red-800'}`}>
                   {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
                 </p>
               </div>
-              <div className={`p-2 rounded-full ${difference === 0 ? 'bg-green-100' : difference > 0 ? 'bg-blue-100' : 'bg-red-100'}`}>
+              <div className={`p-2 rounded-full ${difference === 0 ? 'bg-teal-100' : difference > 0 ? 'bg-purple-100' : 'bg-red-100'}`}>
                 <span className="text-xl">{difference === 0 ? '✓' : difference > 0 ? '+' : '-'}</span>
               </div>
             </div>
@@ -611,7 +630,9 @@ export default function StepReports() {
                 </tr>
               </TableHeader>
               <TableBody>
-                {validCashBoxes.map((box, index) => {
+                {validCashBoxes
+                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                  .map((box, index) => {
                   const boxTotal = calculateBreakdownTotal(box.breakdown || {});
                   const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
                   const isOk = Math.abs(boxDifference) < 0.01;
