@@ -64,7 +64,7 @@ export default function StepCashBoxEntry() {
     mode: "onChange"
   });
 
-  const breakdownTotal = calculateBreakdownTotal(form.watch("breakdown") || {});
+  // Remove this line as the total is now calculated in CashBreakdownForm
 
   const handlePrevious = () => {
     if (state.currentCashBoxIndex > 0) {
@@ -77,7 +77,7 @@ export default function StepCashBoxEntry() {
   const handleSaveAndContinue = (data: CashBoxSchemaType) => {
     // Ensure breakdown has valid numbers
     const cleanBreakdown = Object.fromEntries(
-      Object.entries(data.breakdown).map(([key, value]) => [key, Number(value) || 0])
+      Object.entries(data.breakdown || {}).map(([key, value]) => [key, Number(value) || 0])
     );
 
     const formattedData: CashBoxFormData = {
@@ -100,13 +100,38 @@ export default function StepCashBoxEntry() {
   };
 
   const handleNextCashBox = (data: CashBoxSchemaType) => {
-    handleSaveAndContinue(data);
+    // First save the current cash box data
+    const cleanBreakdown = Object.fromEntries(
+      Object.entries(data.breakdown || {}).map(([key, value]) => [key, Number(value) || 0])
+    );
 
+    const formattedData: CashBoxFormData = {
+      ...data,
+      breakdown: cleanBreakdown as any,
+    };
+
+    dispatch({ 
+      type: "UPDATE_CASH_BOX", 
+      payload: { 
+        index: state.currentCashBoxIndex, 
+        data: formattedData 
+      } 
+    });
+
+    // Then navigate to next cash box or validation step
     if (state.currentCashBoxIndex < state.totalCashBoxes - 1) {
       dispatch({ type: "SET_CURRENT_CASH_BOX_INDEX", payload: state.currentCashBoxIndex + 1 });
+      toast({
+        title: "Bote guardado",
+        description: `Pasando al bote ${state.currentCashBoxIndex + 2}`,
+      });
     } else {
       // All cash boxes completed, go to validation
       dispatch({ type: "SET_CURRENT_STEP", payload: 3 });
+      toast({
+        title: "Botes completados",
+        description: "Todos los botes han sido procesados. Procediendo a validación.",
+      });
     }
   };
 
@@ -250,16 +275,13 @@ export default function StepCashBoxEntry() {
                     Arqueo Detallado
                   </h4>
                   
-                  <CashBreakdownForm form={form} />
-                  
-                  <div className="border-t border-gray-200 pt-3">
-                    <div className="flex justify-between items-center bg-gray-50 px-3 py-2 rounded">
-                      <span className="text-sm font-medium text-gray-700">Total Arqueo:</span>
-                      <span className="text-lg font-semibold text-primary">
-                        €{breakdownTotal.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
+                  <CashBreakdownForm 
+                    breakdown={form.watch("breakdown") || {}}
+                    onBreakdownChange={(newBreakdown) => {
+                      form.setValue("breakdown", newBreakdown);
+                      form.trigger("breakdown");
+                    }}
+                  />
                 </div>
               </div>
 
