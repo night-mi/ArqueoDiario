@@ -18,9 +18,10 @@ export default function StepValidation() {
   };
 
   const calculateTotals = () => {
-    const totalVales = state.cashBoxes.reduce((sum, box) => sum + box.valeAmount, 0);
-    const totalBreakdown = state.cashBoxes.reduce((sum, box) => 
-      sum + calculateBreakdownTotal(box.breakdown), 0
+    const validCashBoxes = state.cashBoxes.filter(box => box.date && box.workerName);
+    const totalVales = validCashBoxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
+    const totalBreakdown = validCashBoxes.reduce((sum, box) => 
+      sum + calculateBreakdownTotal(box.breakdown || {}), 0
     );
     const difference = totalBreakdown - totalVales;
 
@@ -121,9 +122,9 @@ export default function StepValidation() {
             <div className="space-y-4">
               <h4 className="font-medium text-gray-900">Resumen de Botes</h4>
               <div className="space-y-3">
-                {state.cashBoxes.map((cashBox, index) => {
-                  const breakdownTotal = calculateBreakdownTotal(cashBox.breakdown);
-                  const boxDifference = breakdownTotal - cashBox.valeAmount;
+                {state.cashBoxes.filter(box => box.date && box.workerName).map((cashBox, index) => {
+                  const breakdownTotal = calculateBreakdownTotal(cashBox.breakdown || {});
+                  const boxDifference = breakdownTotal - (Number(cashBox.valeAmount) || 0);
                   
                   return (
                     <div key={index} className="border border-gray-200 rounded-lg p-4">
@@ -138,7 +139,7 @@ export default function StepValidation() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-600">
-                            Vale: €{cashBox.valeAmount.toFixed(2)} | Arqueo: €{breakdownTotal.toFixed(2)}
+                            Vale: €{(Number(cashBox.valeAmount) || 0).toFixed(2)} | Arqueo: €{breakdownTotal.toFixed(2)}
                           </p>
                           <p className={`text-sm font-medium ${
                             Math.abs(boxDifference) > 0.01 ? "text-orange-600" : "text-green-600"

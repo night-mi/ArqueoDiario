@@ -35,8 +35,13 @@ export default function StepCashBoxEntry() {
   const { state, dispatch } = useReconciliation();
   const { toast } = useToast();
 
+  const getCurrentDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const currentCashBox = state.cashBoxes[state.currentCashBoxIndex] || {
-    date: "",
+    date: getCurrentDate(),
     workerName: "",
     shift: 1,
     valeAmount: 0,
@@ -50,6 +55,7 @@ export default function StepCashBoxEntry() {
   const form = useForm<CashBoxSchemaType>({
     resolver: zodResolver(cashBoxSchema),
     defaultValues: currentCashBox,
+    mode: "onChange"
   });
 
   const breakdownTotal = calculateBreakdownTotal(form.watch("breakdown") || {});
@@ -63,9 +69,14 @@ export default function StepCashBoxEntry() {
   };
 
   const handleSaveAndContinue = (data: CashBoxSchemaType) => {
+    // Ensure breakdown has valid numbers
+    const cleanBreakdown = Object.fromEntries(
+      Object.entries(data.breakdown).map(([key, value]) => [key, Number(value) || 0])
+    );
+
     const formattedData: CashBoxFormData = {
       ...data,
-      breakdown: data.breakdown as any,
+      breakdown: cleanBreakdown as any,
     };
 
     dispatch({ 
@@ -135,7 +146,10 @@ export default function StepCashBoxEntry() {
 
                   <div>
                     <Label htmlFor="worker">Trabajador</Label>
-                    <Select onValueChange={(value) => form.setValue("workerName", value)}>
+                    <Select 
+                      onValueChange={(value) => form.setValue("workerName", value)}
+                      value={form.watch("workerName")}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccionar trabajador" />
                       </SelectTrigger>

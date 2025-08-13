@@ -39,9 +39,10 @@ export default function StepReport() {
   };
 
   const calculateTotals = () => {
-    const totalVales = state.cashBoxes.reduce((sum, box) => sum + box.valeAmount, 0);
-    const totalBreakdown = state.cashBoxes.reduce((sum, box) => 
-      sum + calculateBreakdownTotal(box.breakdown), 0
+    const validCashBoxes = state.cashBoxes.filter(box => box.date && box.workerName);
+    const totalVales = validCashBoxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
+    const totalBreakdown = validCashBoxes.reduce((sum, box) => 
+      sum + calculateBreakdownTotal(box.breakdown || {}), 0
     );
     const difference = totalBreakdown - totalVales;
 
@@ -59,14 +60,16 @@ export default function StepReport() {
       difference: difference.toString(),
     };
 
-    const cashBoxes: InsertCashBox[] = state.cashBoxes.map(box => ({
-      date: box.date,
-      workerName: box.workerName,
-      shift: box.shift,
-      valeAmount: box.valeAmount.toString(),
-      breakdown: JSON.stringify(box.breakdown),
-      totalBreakdown: calculateBreakdownTotal(box.breakdown).toString(),
-    }));
+    const cashBoxes: InsertCashBox[] = state.cashBoxes
+      .filter(box => box.date && box.workerName)
+      .map(box => ({
+        date: box.date,
+        workerName: box.workerName,
+        shift: box.shift,
+        valeAmount: (Number(box.valeAmount) || 0).toString(),
+        breakdown: JSON.stringify(box.breakdown || {}),
+        totalBreakdown: calculateBreakdownTotal(box.breakdown || {}).toString(),
+      }));
 
     saveReconciliationMutation.mutate({ session, cashBoxes });
   };
@@ -139,9 +142,9 @@ export default function StepReport() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {state.cashBoxes.map((cashBox, index) => {
-                    const breakdownTotal = calculateBreakdownTotal(cashBox.breakdown);
-                    const boxDifference = breakdownTotal - cashBox.valeAmount;
+                  {state.cashBoxes.filter(box => box.date && box.workerName).map((cashBox, index) => {
+                    const breakdownTotal = calculateBreakdownTotal(cashBox.breakdown || {});
+                    const boxDifference = breakdownTotal - (Number(cashBox.valeAmount) || 0);
                     
                     return (
                       <TableRow key={index}>
@@ -153,7 +156,7 @@ export default function StepReport() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          €{cashBox.valeAmount.toFixed(2)}
+                          €{(Number(cashBox.valeAmount) || 0).toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right font-medium">
                           €{breakdownTotal.toFixed(2)}
