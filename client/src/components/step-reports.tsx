@@ -427,6 +427,20 @@ export default function StepReports() {
             font-size: 13px;
             border: 1px solid #b8dacc;
           }
+          .worker-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+          }
+          .breakdown-detail {
+            font-size: 10px;
+            color: #6c757d;
+            font-style: italic;
+            background: rgba(108, 117, 125, 0.1);
+            padding: 2px 6px;
+            border-radius: 8px;
+            max-width: fit-content;
+          }
           .amounts { color: #7f8c8d; font-size: 14px; }
           .date-totals { 
             background: #e8f4f8; 
@@ -514,9 +528,16 @@ export default function StepReports() {
                         <div class="shift-title">🌅 Turno Mañana (${shift1Boxes.length} botes)</div>
                         ${shift1Boxes.map(box => {
                           const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+                          const breakdownDetails = DENOMINATIONS
+                            .filter(denom => (box.breakdown && box.breakdown[denom.value] > 0))
+                            .map(denom => `${denom.label}(${box.breakdown[denom.value]})`)
+                            .join(', ');
                           return `
                             <div class="worker-line">
-                              <span class="worker-name">${box.workerName}</span>
+                              <div class="worker-info">
+                                <span class="worker-name">${box.workerName}</span>
+                                ${breakdownDetails ? `<div class="breakdown-detail">💰 ${breakdownDetails}</div>` : ''}
+                              </div>
                               <span class="worker-amount">€${boxTotal.toFixed(2)}</span>
                             </div>
                           `;
@@ -529,9 +550,16 @@ export default function StepReports() {
                         <div class="shift-title">🌙 Turno Tarde (${shift2Boxes.length} botes)</div>
                         ${shift2Boxes.map(box => {
                           const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+                          const breakdownDetails = DENOMINATIONS
+                            .filter(denom => (box.breakdown && box.breakdown[denom.value] > 0))
+                            .map(denom => `${denom.label}(${box.breakdown[denom.value]})`)
+                            .join(', ');
                           return `
                             <div class="worker-line">
-                              <span class="worker-name">${box.workerName}</span>
+                              <div class="worker-info">
+                                <span class="worker-name">${box.workerName}</span>
+                                ${breakdownDetails ? `<div class="breakdown-detail">💰 ${breakdownDetails}</div>` : ''}
+                              </div>
                               <span class="worker-amount">€${boxTotal.toFixed(2)}</span>
                             </div>
                           `;
@@ -566,47 +594,59 @@ export default function StepReports() {
 
   const renderByBoxesReport = () => (
     <div className="space-y-6">
-      {/* Summary Cards with Color Bands */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="overflow-hidden">
-          <div className="h-2 bg-gradient-to-r from-blue-400 to-blue-600"></div>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-700">Total Vales</p>
-                <p className="text-2xl font-bold text-blue-800">€{totalVales.toFixed(2)}</p>
-              </div>
-              <FileText className="h-8 w-8 text-blue-500" />
+      {/* Modern Summary Cards with Vivid Gradients */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white">
+          <div className="h-1 bg-gradient-to-r from-cyan-300 via-blue-200 to-indigo-300"></div>
+          <CardContent className="pt-6 relative">
+            <div className="absolute top-4 right-4 opacity-20">
+              <FileText className="h-12 w-12" />
+            </div>
+            <div className="relative z-10">
+              <p className="text-blue-100 text-sm font-medium mb-2">💰 Total Vales</p>
+              <p className="text-3xl font-bold mb-1">€{totalVales.toFixed(2)}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
-          <div className="h-2 bg-gradient-to-r from-green-400 to-emerald-600"></div>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-700">Total Contado</p>
-                <p className="text-2xl font-bold text-green-800">€{totalBreakdown.toFixed(2)}</p>
-              </div>
-              <Calculator className="h-8 w-8 text-green-500" />
+        <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 text-white">
+          <div className="h-1 bg-gradient-to-r from-green-300 via-emerald-200 to-teal-300"></div>
+          <CardContent className="pt-6 relative">
+            <div className="absolute top-4 right-4 opacity-20">
+              <Calculator className="h-12 w-12" />
+            </div>
+            <div className="relative z-10">
+              <p className="text-emerald-100 text-sm font-medium mb-2">🔢 Total Contado</p>
+              <p className="text-3xl font-bold mb-1">€{totalBreakdown.toFixed(2)}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
-          <div className={`h-2 bg-gradient-to-r ${difference === 0 ? 'from-teal-400 to-cyan-600' : difference > 0 ? 'from-purple-400 to-indigo-600' : 'from-red-400 to-pink-600'}`}></div>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${difference === 0 ? 'text-teal-700' : difference > 0 ? 'text-purple-700' : 'text-red-700'}`}>Diferencia</p>
-                <p className={`text-2xl font-bold ${difference === 0 ? 'text-teal-800' : difference > 0 ? 'text-purple-800' : 'text-red-800'}`}>
-                  {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
-                </p>
-              </div>
-              <div className={`p-2 rounded-full ${difference === 0 ? 'bg-teal-100' : difference > 0 ? 'bg-purple-100' : 'bg-red-100'}`}>
-                <span className="text-xl">{difference === 0 ? '✓' : difference > 0 ? '+' : '-'}</span>
-              </div>
+        <Card className={`overflow-hidden shadow-lg border-0 text-white ${
+          difference === 0 
+            ? 'bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-600' 
+            : difference > 0 
+            ? 'bg-gradient-to-br from-purple-400 via-violet-500 to-indigo-600' 
+            : 'bg-gradient-to-br from-red-400 via-pink-500 to-rose-600'
+        }`}>
+          <div className={`h-1 bg-gradient-to-r ${
+            difference === 0 
+              ? 'from-teal-300 via-cyan-200 to-blue-300' 
+              : difference > 0 
+              ? 'from-purple-300 via-violet-200 to-indigo-300' 
+              : 'from-red-300 via-pink-200 to-rose-300'
+          }`}></div>
+          <CardContent className="pt-6 relative">
+            <div className="absolute top-4 right-4 opacity-20 text-4xl">
+              {difference === 0 ? '✨' : difference > 0 ? '📈' : '📉'}
+            </div>
+            <div className="relative z-10">
+              <p className="text-white/80 text-sm font-medium mb-2">
+                {difference === 0 ? '✅ Perfecto' : difference > 0 ? '📊 Diferencia' : '⚠️ Diferencia'}
+              </p>
+              <p className="text-3xl font-bold mb-1">
+                {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -637,29 +677,48 @@ export default function StepReports() {
                   const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
                   const isOk = Math.abs(boxDifference) < 0.01;
 
+                  // Get breakdown details for display
+                  const breakdownDetails = DENOMINATIONS
+                    .filter(denom => (box.breakdown && box.breakdown[denom.value] > 0))
+                    .map(denom => `${denom.label}(${box.breakdown[denom.value]})`)
+                    .join(', ');
+
                   return (
-                    <tr key={index}>
-                      <TableCell className="font-medium">#{index + 1}</TableCell>
-                      <TableCell>{new Date(box.date).toLocaleDateString('es-ES')}</TableCell>
-                      <TableCell>{box.workerName}</TableCell>
-                      <TableCell>
-                        <Badge variant={box.shift === 1 ? "default" : "secondary"}>
-                          {box.shift === 1 ? 'Mañana' : 'Tarde'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-mono">€{(Number(box.valeAmount) || 0).toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-mono">€{boxTotal.toFixed(2)}</TableCell>
-                      <TableCell className={`text-right font-mono ${
-                        isOk ? 'text-green-600' : boxDifference > 0 ? 'text-blue-600' : 'text-red-600'
-                      }`}>
-                        {boxDifference > 0 ? '+' : ''}€{boxDifference.toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={isOk ? "default" : "destructive"}>
-                          {isOk ? '✓ OK' : '⚠ Diff'}
-                        </Badge>
-                      </TableCell>
-                    </tr>
+                    <>
+                      <tr key={index} className="group hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50">
+                        <TableCell className="font-medium bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800">#{index + 1}</TableCell>
+                        <TableCell className="font-medium">{new Date(box.date).toLocaleDateString('es-ES')}</TableCell>
+                        <TableCell className="font-semibold text-gray-800">{box.workerName}</TableCell>
+                        <TableCell>
+                          <Badge variant={box.shift === 1 ? "default" : "secondary"} className={box.shift === 1 ? "bg-orange-100 text-orange-800" : "bg-indigo-100 text-indigo-800"}>
+                            {box.shift === 1 ? '🌅 Mañana' : '🌙 Tarde'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-mono bg-blue-50 text-blue-700 font-semibold">€{(Number(box.valeAmount) || 0).toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-mono bg-green-50 text-green-700 font-semibold">€{boxTotal.toFixed(2)}</TableCell>
+                        <TableCell className={`text-right font-mono font-bold ${
+                          isOk ? 'text-emerald-600 bg-emerald-50' : boxDifference > 0 ? 'text-blue-600 bg-blue-50' : 'text-red-600 bg-red-50'
+                        }`}>
+                          {boxDifference > 0 ? '+' : ''}€{boxDifference.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={isOk ? "default" : "destructive"} className={isOk ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}>
+                            {isOk ? '✓ OK' : '⚠ Diff'}
+                          </Badge>
+                        </TableCell>
+                      </tr>
+                      {breakdownDetails && (
+                        <tr key={`${index}-breakdown`} className="bg-gray-50">
+                          <TableCell colSpan={8} className="text-xs text-gray-600 italic px-8">
+                            <div className="flex items-center gap-2">
+                              <span className="text-purple-600">💰</span>
+                              <span className="font-medium">Arqueo:</span>
+                              <span>{breakdownDetails}</span>
+                            </div>
+                          </TableCell>
+                        </tr>
+                      )}
+                    </>
                   );
                 })}
               </TableBody>
