@@ -334,11 +334,13 @@ export default function StepReports() {
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            line-height: 1.4; 
-            color: #2c3e50;
-            background: #f8f9fa;
+            font-family: 'Inter', 'SF Pro Display', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', sans-serif;
+            line-height: 1.6; 
+            color: #1a202c;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
+            font-weight: 400;
+            letter-spacing: -0.01em;
           }
           .container { 
             max-width: 900px; 
@@ -349,13 +351,36 @@ export default function StepReports() {
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
           }
           .header { 
-            background: linear-gradient(135deg, #27ae60 0%, #2c3e50 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white; 
-            padding: 30px; 
+            padding: 35px; 
             text-align: center;
+            position: relative;
+            overflow: hidden;
           }
-          .header h1 { font-size: 24px; margin-bottom: 10px; }
-          .header .company { font-size: 16px; opacity: 0.9; }
+          .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><polygon points="0,100 1000,0 1000,100"/></svg>');
+            background-size: cover;
+          }
+          .header h1 { 
+            font-size: 28px; 
+            margin-bottom: 12px; 
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          .header .company { 
+            font-size: 18px; 
+            opacity: 0.95;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+          }
           .content { padding: 30px; }
           .summary { 
             background: #ecf0f1; 
@@ -396,14 +421,17 @@ export default function StepReports() {
             border-radius: 4px;
           }
           .shift-title { 
-            font-weight: 600; 
-            color: #2c3e50; 
-            margin-bottom: 12px; 
-            font-size: 16px;
-            background: linear-gradient(45deg, #f1f3f4, #e8eaf6);
-            padding: 10px 15px;
-            border-radius: 6px;
-            border-left: 4px solid #3498db;
+            font-weight: 700; 
+            color: #1a202c; 
+            margin-bottom: 16px; 
+            font-size: 18px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 12px 18px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.01em;
           }
           .worker-line { 
             display: flex; 
@@ -440,6 +468,133 @@ export default function StepReports() {
             padding: 2px 6px;
             border-radius: 8px;
             max-width: fit-content;
+          }
+          .worker-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+          }
+          .worker-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+          }
+          .worker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+          }
+          .worker-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.02em;
+          }
+          .worker-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+          .vale-amount, .arqueo-amount {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+          }
+          .arqueo-amount {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+          }
+          .difference-amount {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+          }
+          .difference-amount.balanced {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+          }
+          .difference-amount.positive {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+          }
+          .difference-amount.negative {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+          }
+          .breakdown-section {
+            margin-top: 16px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 10px;
+            padding: 16px;
+          }
+          .breakdown-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+            font-family: 'Inter', sans-serif;
+          }
+          .breakdown-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+          }
+          .breakdown-group {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+          }
+          .breakdown-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+          }
+          .breakdown-items {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+          }
+          .breakdown-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 8px;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid #f1f5f9;
+          }
+          .breakdown-item:last-child {
+            border-bottom: none;
+          }
+          .denom-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #2d3748;
+          }
+          .denom-count {
+            font-size: 12px;
+            color: #718096;
+            font-family: 'SF Mono', monospace;
+          }
+          .denom-total {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d3748;
+            font-family: 'SF Mono', monospace;
           }
           .amounts { color: #7f8c8d; font-size: 14px; }
           .date-totals { 
@@ -526,19 +681,61 @@ export default function StepReports() {
                     ${shift1Boxes.length > 0 ? `
                       <div class="shift-section">
                         <div class="shift-title">🌅 Turno Mañana (${shift1Boxes.length} botes)</div>
-                        ${shift1Boxes.map(box => {
+                        ${shift1Boxes.map((box, boxIndex) => {
                           const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-                          const breakdownDetails = DENOMINATIONS
-                            .filter(denom => (box.breakdown && box.breakdown[denom.value] > 0))
-                            .map(denom => `${denom.label}(${box.breakdown[denom.value]})`)
-                            .join(', ');
+                          const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
+                          const bills = DENOMINATIONS.filter(d => d.type === "bill" && (box.breakdown?.[d.value] || 0) > 0);
+                          const coins = DENOMINATIONS.filter(d => d.type === "coin" && (box.breakdown?.[d.value] || 0) > 0);
+                          
                           return `
-                            <div class="worker-line">
-                              <div class="worker-info">
-                                <span class="worker-name">${box.workerName}</span>
-                                ${breakdownDetails ? `<div class="breakdown-detail">💰 ${breakdownDetails}</div>` : ''}
+                            <div class="worker-card">
+                              <div class="worker-header">
+                                <div class="worker-info">
+                                  <div class="worker-name">${box.workerName}</div>
+                                  <div class="worker-meta">
+                                    <span class="vale-amount">Vale: €${(Number(box.valeAmount) || 0).toFixed(2)}</span>
+                                    <span class="arqueo-amount">Arqueo: €${boxTotal.toFixed(2)}</span>
+                                    <span class="difference-amount ${Math.abs(boxDifference) < 0.01 ? 'balanced' : boxDifference > 0 ? 'positive' : 'negative'}">
+                                      Dif: ${boxDifference >= 0 ? '+' : ''}€${boxDifference.toFixed(2)}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                              <span class="worker-amount">€${boxTotal.toFixed(2)}</span>
+                              ${(bills.length > 0 || coins.length > 0) ? `
+                                <div class="breakdown-section">
+                                  <div class="breakdown-title">💰 Desglose del Arqueo</div>
+                                  <div class="breakdown-grid">
+                                    ${bills.length > 0 ? `
+                                      <div class="breakdown-group">
+                                        <div class="breakdown-label">💵 Billetes</div>
+                                        <div class="breakdown-items">
+                                          ${bills.map(bill => `
+                                            <div class="breakdown-item">
+                                              <span class="denom-label">${bill.label}</span>
+                                              <span class="denom-count">${box.breakdown[bill.value]} ud.</span>
+                                              <span class="denom-total">€${(parseFloat(bill.value) * box.breakdown[bill.value]).toFixed(2)}</span>
+                                            </div>
+                                          `).join('')}
+                                        </div>
+                                      </div>
+                                    ` : ''}
+                                    ${coins.length > 0 ? `
+                                      <div class="breakdown-group">
+                                        <div class="breakdown-label">🪙 Monedas</div>
+                                        <div class="breakdown-items">
+                                          ${coins.map(coin => `
+                                            <div class="breakdown-item">
+                                              <span class="denom-label">${coin.label}</span>
+                                              <span class="denom-count">${box.breakdown[coin.value]} ud.</span>
+                                              <span class="denom-total">€${(parseFloat(coin.value) * box.breakdown[coin.value]).toFixed(2)}</span>
+                                            </div>
+                                          `).join('')}
+                                        </div>
+                                      </div>
+                                    ` : ''}
+                                  </div>
+                                </div>
+                              ` : ''}
                             </div>
                           `;
                         }).join('')}
@@ -548,19 +745,61 @@ export default function StepReports() {
                     ${shift2Boxes.length > 0 ? `
                       <div class="shift-section">
                         <div class="shift-title">🌙 Turno Tarde (${shift2Boxes.length} botes)</div>
-                        ${shift2Boxes.map(box => {
+                        ${shift2Boxes.map((box, boxIndex) => {
                           const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-                          const breakdownDetails = DENOMINATIONS
-                            .filter(denom => (box.breakdown && box.breakdown[denom.value] > 0))
-                            .map(denom => `${denom.label}(${box.breakdown[denom.value]})`)
-                            .join(', ');
+                          const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
+                          const bills = DENOMINATIONS.filter(d => d.type === "bill" && (box.breakdown?.[d.value] || 0) > 0);
+                          const coins = DENOMINATIONS.filter(d => d.type === "coin" && (box.breakdown?.[d.value] || 0) > 0);
+                          
                           return `
-                            <div class="worker-line">
-                              <div class="worker-info">
-                                <span class="worker-name">${box.workerName}</span>
-                                ${breakdownDetails ? `<div class="breakdown-detail">💰 ${breakdownDetails}</div>` : ''}
+                            <div class="worker-card">
+                              <div class="worker-header">
+                                <div class="worker-info">
+                                  <div class="worker-name">${box.workerName}</div>
+                                  <div class="worker-meta">
+                                    <span class="vale-amount">Vale: €${(Number(box.valeAmount) || 0).toFixed(2)}</span>
+                                    <span class="arqueo-amount">Arqueo: €${boxTotal.toFixed(2)}</span>
+                                    <span class="difference-amount ${Math.abs(boxDifference) < 0.01 ? 'balanced' : boxDifference > 0 ? 'positive' : 'negative'}">
+                                      Dif: ${boxDifference >= 0 ? '+' : ''}€${boxDifference.toFixed(2)}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                              <span class="worker-amount">€${boxTotal.toFixed(2)}</span>
+                              ${(bills.length > 0 || coins.length > 0) ? `
+                                <div class="breakdown-section">
+                                  <div class="breakdown-title">💰 Desglose del Arqueo</div>
+                                  <div class="breakdown-grid">
+                                    ${bills.length > 0 ? `
+                                      <div class="breakdown-group">
+                                        <div class="breakdown-label">💵 Billetes</div>
+                                        <div class="breakdown-items">
+                                          ${bills.map(bill => `
+                                            <div class="breakdown-item">
+                                              <span class="denom-label">${bill.label}</span>
+                                              <span class="denom-count">${box.breakdown[bill.value]} ud.</span>
+                                              <span class="denom-total">€${(parseFloat(bill.value) * box.breakdown[bill.value]).toFixed(2)}</span>
+                                            </div>
+                                          `).join('')}
+                                        </div>
+                                      </div>
+                                    ` : ''}
+                                    ${coins.length > 0 ? `
+                                      <div class="breakdown-group">
+                                        <div class="breakdown-label">🪙 Monedas</div>
+                                        <div class="breakdown-items">
+                                          ${coins.map(coin => `
+                                            <div class="breakdown-item">
+                                              <span class="denom-label">${coin.label}</span>
+                                              <span class="denom-count">${box.breakdown[coin.value]} ud.</span>
+                                              <span class="denom-total">€${(parseFloat(coin.value) * box.breakdown[coin.value]).toFixed(2)}</span>
+                                            </div>
+                                          `).join('')}
+                                        </div>
+                                      </div>
+                                    ` : ''}
+                                  </div>
+                                </div>
+                              ` : ''}
                             </div>
                           `;
                         }).join('')}
@@ -742,45 +981,86 @@ export default function StepReports() {
 
     return (
       <div className="space-y-6">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Vales</p>
-                  <p className="text-2xl font-bold">€{totalVales.toFixed(2)}</p>
-                </div>
-                <FileText className="h-8 w-8 text-blue-600" />
+        {/* Modern Gradient Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white">
+            <div className="h-1 bg-gradient-to-r from-cyan-300 via-blue-200 to-indigo-300"></div>
+            <CardContent className="pt-6 relative">
+              <div className="absolute top-4 right-4 opacity-20">
+                <FileText className="h-12 w-12" />
+              </div>
+              <div className="relative z-10">
+                <p className="text-blue-100 text-sm font-medium mb-2">💰 Total Vales</p>
+                <p className="text-3xl font-bold mb-1">€{totalVales.toFixed(2)}</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Contado</p>
-                  <p className="text-2xl font-bold">€{totalBreakdown.toFixed(2)}</p>
-                </div>
-                <Calculator className="h-8 w-8 text-green-600" />
+          <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 text-white">
+            <div className="h-1 bg-gradient-to-r from-green-300 via-emerald-200 to-teal-300"></div>
+            <CardContent className="pt-6 relative">
+              <div className="absolute top-4 right-4 opacity-20">
+                <Calculator className="h-12 w-12" />
+              </div>
+              <div className="relative z-10">
+                <p className="text-emerald-100 text-sm font-medium mb-2">🔢 Total Contado</p>
+                <p className="text-3xl font-bold mb-1">€{totalBreakdown.toFixed(2)}</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Diferencia</p>
-                  <p className={`text-2xl font-bold ${difference === 0 ? 'text-green-600' : difference > 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                    {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
-                  </p>
-                </div>
-                <Calendar className="h-8 w-8 text-purple-600" />
+          <Card className={`overflow-hidden shadow-lg border-0 text-white ${
+            difference === 0 
+              ? 'bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-600' 
+              : difference > 0 
+              ? 'bg-gradient-to-br from-purple-400 via-violet-500 to-indigo-600' 
+              : 'bg-gradient-to-br from-red-400 via-pink-500 to-rose-600'
+          }`}>
+            <div className={`h-1 bg-gradient-to-r ${
+              difference === 0 
+                ? 'from-teal-300 via-cyan-200 to-blue-300' 
+                : difference > 0 
+                ? 'from-purple-300 via-violet-200 to-indigo-300' 
+                : 'from-red-300 via-pink-200 to-rose-300'
+            }`}></div>
+            <CardContent className="pt-6 relative">
+              <div className="absolute top-4 right-4 opacity-20 text-4xl">
+                {difference === 0 ? '✨' : difference > 0 ? '📈' : '📉'}
+              </div>
+              <div className="relative z-10">
+                <p className="text-white/80 text-sm font-medium mb-2">
+                  {difference === 0 ? '✅ Perfecto' : difference > 0 ? '📊 Diferencia' : '⚠️ Diferencia'}
+                </p>
+                <p className="text-3xl font-bold mb-1">
+                  {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
+                </p>
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Generate Detailed Report Button */}
+        <div className="text-center bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
+            <span className="text-2xl">📅</span>
+            Informe Detallado por Fecha
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Genera un informe completo con desglose detallado de billetes y monedas organizado por fechas y turnos
+          </p>
+          <Button 
+            onClick={() => {
+              const reportWindow = window.open('', '_blank');
+              if (reportWindow) {
+                reportWindow.document.write(generateReportByDate(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName));
+                reportWindow.document.close();
+              }
+            }}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+          >
+            <FileText className="mr-2 h-5 w-5" />
+            🚀 Generar Informe por Fecha
+          </Button>
         </div>
 
         {/* Date-based breakdown */}
