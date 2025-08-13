@@ -111,98 +111,120 @@ export default function StepReports() {
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            line-height: 1.5; 
-            color: #2c3e50;
-            background: #f8f9fa;
-            padding: 20px;
+            font-family: 'Arial', 'Helvetica', sans-serif; 
+            line-height: 1.3; 
+            color: #000;
+            background: #fff;
+            padding: 10px;
+            font-size: 12px;
           }
           .container { 
-            max-width: 1000px; 
-            margin: 0 auto; 
+            max-width: 100%; 
+            margin: 0; 
             background: white; 
-            border-radius: 8px; 
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #000;
           }
           .header { 
-            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
-            color: white; 
-            padding: 30px; 
+            background: #fff;
+            color: #000; 
+            padding: 15px; 
             text-align: center;
+            border-bottom: 2px solid #000;
           }
-          .header h1 { font-size: 24px; margin-bottom: 10px; }
-          .header .company { font-size: 16px; opacity: 0.9; }
-          .content { padding: 30px; }
+          .header h1 { 
+            font-size: 18px; 
+            margin: 0 0 5px 0; 
+            font-weight: bold;
+            text-transform: uppercase;
+          }
+          .header .company { 
+            font-size: 14px; 
+            font-weight: normal;
+            margin: 0;
+          }
+          .content { padding: 10px; }
           .info-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 20px; 
-            margin-bottom: 30px;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 10px;
           }
           .info-card { 
-            background: #f8f9fa; 
-            padding: 15px; 
-            border-radius: 6px; 
-            border-left: 4px solid #3498db;
+            display: inline-block;
+            margin-right: 15px; 
           }
-          .info-card .label { font-size: 12px; color: #7f8c8d; text-transform: uppercase; }
-          .info-card .value { font-size: 16px; font-weight: 600; color: #2c3e50; }
+          .info-card .label { 
+            font-size: 11px; 
+            color: #000; 
+            font-weight: bold;
+            margin-right: 5px;
+          }
+          .info-card .value { 
+            font-size: 11px; 
+            font-weight: normal; 
+            color: #000; 
+          }
           .summary { 
-            background: #ecf0f1; 
-            padding: 20px; 
-            border-radius: 6px; 
-            margin-bottom: 30px;
+            background: #fff; 
+            padding: 10px; 
+            border: 1px solid #000; 
+            margin-bottom: 10px;
+            text-align: left;
           }
           .summary-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 20px; 
-            text-align: center;
+            display: inline-block;
+            width: 100%;
+            margin-top: 5px;
           }
-          .summary-item { background: white; padding: 15px; border-radius: 6px; }
-          .summary-item .amount { font-size: 20px; font-weight: bold; }
-          .summary-item.positive .amount { color: #27ae60; }
-          .summary-item.negative .amount { color: #e74c3c; }
-          .summary-item.neutral .amount { color: #3498db; }
+          .summary-item { 
+            display: inline-block; 
+            margin-right: 20px; 
+          }
+          .summary-item .label { 
+            font-weight: bold; 
+            margin-right: 5px; 
+          }
+          .summary-item .amount { 
+            font-size: 14px; 
+            font-weight: bold; 
+            color: #000;
+          }
           table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin-top: 20px;
+            margin-top: 10px;
             background: white;
-            border-radius: 6px;
-            overflow: hidden;
+            border: 1px solid #000;
           }
           th { 
-            background: #34495e; 
+            background: #000; 
             color: white; 
-            padding: 15px 10px; 
-            font-weight: 600; 
-            font-size: 14px;
+            padding: 8px 6px; 
+            font-weight: bold; 
+            font-size: 12px;
+            text-transform: uppercase;
+            border: 1px solid #000;
           }
           td { 
-            padding: 12px 10px; 
-            border-bottom: 1px solid #ecf0f1;
+            padding: 6px 6px; 
+            border: 1px solid #000;
             vertical-align: top;
+            font-size: 11px;
           }
-          tbody tr:hover { background: #f8f9fa; }
-          .status.ok { color: #27ae60; font-weight: 600; }
-          .status.warning { color: #f39c12; font-weight: 600; }
+          .status.ok { color: #000; font-weight: normal; }
+          .status.warning { color: #000; font-weight: normal; }
           .print-btn { 
             position: fixed; 
-            top: 20px; 
-            right: 20px; 
-            background: #3498db; 
+            top: 10px; 
+            right: 10px; 
+            background: #000; 
             color: white; 
-            border: none; 
-            padding: 12px 20px; 
-            border-radius: 25px; 
+            border: 1px solid #000; 
+            padding: 8px 12px; 
             cursor: pointer; 
-            font-size: 14px;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            font-size: 12px;
             z-index: 1000;
           }
-          .print-btn:hover { background: #2980b9; }
+          .print-btn:hover { background: #333; }
           @media print { 
             body { background: white; padding: 0; }
             .container { box-shadow: none; }
@@ -211,7 +233,7 @@ export default function StepReports() {
         </style>
       </head>
       <body>
-        <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="print-btn" onclick="window.print()">IMPRIMIR</button>
         <div class="container">
           <div class="header">
             <h1>ARQUEO DE CAJA POR BOTES</h1>
@@ -334,72 +356,64 @@ export default function StepReports() {
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { 
-            font-family: 'Inter', 'SF Pro Display', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', sans-serif;
-            line-height: 1.6; 
-            color: #1a202c;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            line-height: 1.3; 
+            color: #000;
+            background: #fff;
+            padding: 10px;
             font-weight: 400;
-            letter-spacing: -0.01em;
+            font-size: 12px;
           }
           .container { 
-            max-width: 900px; 
-            margin: 0 auto; 
+            max-width: 100%; 
+            margin: 0; 
             background: white; 
-            border-radius: 8px; 
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #000;
           }
           .header { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; 
-            padding: 35px; 
+            background: #fff;
+            color: #000; 
+            padding: 15px; 
             text-align: center;
-            position: relative;
-            overflow: hidden;
-          }
-          .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><polygon points="0,100 1000,0 1000,100"/></svg>');
-            background-size: cover;
+            border-bottom: 2px solid #000;
           }
           .header h1 { 
-            font-size: 28px; 
-            margin-bottom: 12px; 
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 18px; 
+            margin: 0 0 5px 0; 
+            font-weight: bold;
+            text-transform: uppercase;
           }
           .header .company { 
-            font-size: 18px; 
-            opacity: 0.95;
-            font-weight: 500;
-            letter-spacing: 0.02em;
+            font-size: 14px; 
+            font-weight: normal;
+            margin: 0;
           }
-          .content { padding: 30px; }
+          .content { padding: 10px; }
           .summary { 
-            background: #ecf0f1; 
-            padding: 20px; 
-            border-radius: 6px; 
-            margin-bottom: 30px;
-            text-align: center;
+            background: #fff; 
+            padding: 10px; 
+            border: 1px solid #000; 
+            margin-bottom: 10px;
+            text-align: left;
           }
           .summary-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 15px; 
-            margin-top: 15px;
+            display: inline-block;
+            width: 100%;
+            margin-top: 5px;
           }
-          .summary-item { background: white; padding: 12px; border-radius: 6px; }
-          .summary-item .amount { font-size: 18px; font-weight: bold; }
-          .summary-item.positive .amount { color: #27ae60; }
-          .summary-item.negative .amount { color: #e74c3c; }
-          .summary-item.neutral .amount { color: #3498db; }
+          .summary-item { 
+            display: inline-block; 
+            margin-right: 20px; 
+          }
+          .summary-item .label { 
+            font-weight: bold; 
+            margin-right: 5px; 
+          }
+          .summary-item .amount { 
+            font-size: 14px; 
+            font-weight: bold; 
+            color: #000;
+          }
           .date-section { 
             margin-bottom: 30px; 
             border: 1px solid #ecf0f1; 
@@ -421,17 +435,14 @@ export default function StepReports() {
             border-radius: 4px;
           }
           .shift-title { 
-            font-weight: 700; 
-            color: #1a202c; 
-            margin-bottom: 16px; 
-            font-size: 18px;
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            padding: 12px 18px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            font-family: 'Inter', sans-serif;
-            letter-spacing: -0.01em;
+            font-weight: bold; 
+            color: #000; 
+            margin: 5px 0; 
+            font-size: 14px;
+            background: #fff;
+            padding: 5px 0;
+            border-bottom: 1px solid #000;
+            text-transform: uppercase;
           }
           .worker-line { 
             display: flex; 
@@ -470,131 +481,68 @@ export default function StepReports() {
             max-width: fit-content;
           }
           .worker-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: all 0.2s ease;
-          }
-          .worker-card:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
+            background: #fff;
+            border: 1px solid #000;
+            padding: 8px;
+            margin-bottom: 5px;
           }
           .worker-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
+            margin-bottom: 5px;
           }
           .worker-name {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 8px;
-            font-family: 'Inter', sans-serif;
-            letter-spacing: -0.02em;
+            font-size: 13px;
+            font-weight: bold;
+            color: #000;
+            margin: 0;
+            display: inline-block;
+            width: 120px;
           }
           .worker-meta {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
+            display: inline-block;
           }
-          .vale-amount, .arqueo-amount {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
-          }
-          .arqueo-amount {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-          }
-          .difference-amount {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
-          }
-          .difference-amount.balanced {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
-          }
-          .difference-amount.positive {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-          }
-          .difference-amount.negative {
-            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-            color: white;
+          .vale-amount, .arqueo-amount, .difference-amount {
+            font-size: 11px;
+            font-weight: normal;
+            color: #000;
+            margin-right: 10px;
           }
           .breakdown-section {
-            margin-top: 16px;
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            border-radius: 10px;
-            padding: 16px;
+            margin-top: 3px;
+            background: #fff;
+            border: 1px solid #000;
+            padding: 5px;
+            font-size: 10px;
           }
           .breakdown-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 12px;
-            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 3px;
           }
           .breakdown-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            display: block;
           }
           .breakdown-group {
             background: white;
-            border-radius: 8px;
-            padding: 12px;
-            border: 1px solid #e2e8f0;
+            margin-bottom: 5px;
           }
           .breakdown-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 8px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 2px;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
           }
           .breakdown-items {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+            line-height: 1.2;
           }
           .breakdown-item {
-            display: grid;
-            grid-template-columns: 1fr auto auto;
-            gap: 8px;
-            align-items: center;
-            padding: 4px 0;
-            border-bottom: 1px solid #f1f5f9;
+            display: inline;
+            margin-right: 8px;
           }
-          .breakdown-item:last-child {
-            border-bottom: none;
-          }
-          .denom-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: #2d3748;
-          }
-          .denom-count {
-            font-size: 12px;
-            color: #718096;
-            font-family: 'SF Mono', monospace;
-          }
-          .denom-total {
-            font-size: 13px;
-            font-weight: 600;
-            color: #2d3748;
-            font-family: 'SF Mono', monospace;
+          .denom-label, .denom-count, .denom-total {
+            font-size: 10px;
+            color: #000;
           }
           .amounts { color: #7f8c8d; font-size: 14px; }
           .date-totals { 
@@ -634,7 +582,7 @@ export default function StepReports() {
         </style>
       </head>
       <body>
-        <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="print-btn" onclick="window.print()">IMPRIMIR</button>
         <div class="container">
           <div class="header">
             <h1>ARQUEO DE CAJA POR FECHA</h1>
@@ -645,21 +593,20 @@ export default function StepReports() {
           
           <div class="content">
             <div class="summary">
-              <h3 style="margin-bottom: 10px; color: #2c3e50;">Resumen Total del Período</h3>
-              <div style="font-size: 14px; color: #7f8c8d;">Responsable: ${auditorName} | Generado: ${new Date().toLocaleDateString('es-ES')}</div>
+              <strong>RESUMEN TOTAL - Responsable: ${auditorName} - ${new Date().toLocaleDateString('es-ES')}</strong>
               <div class="summary-grid">
-                <div class="summary-item neutral">
-                  <div class="label">Total Vales</div>
-                  <div class="amount">€${totalVales.toFixed(2)}</div>
-                </div>
-                <div class="summary-item neutral">
-                  <div class="label">Total Contado</div>
-                  <div class="amount">€${totalBreakdown.toFixed(2)}</div>
-                </div>
-                <div class="summary-item ${difference === 0 ? 'positive' : difference > 0 ? 'positive' : 'negative'}">
-                  <div class="label">Diferencia</div>
-                  <div class="amount">${difference > 0 ? '+' : ''}€${difference.toFixed(2)}</div>
-                </div>
+                <span class="summary-item">
+                  <span class="label">TOTAL VALES:</span>
+                  <span class="amount">€${totalVales.toFixed(2)}</span>
+                </span>
+                <span class="summary-item">
+                  <span class="label">TOTAL CONTADO:</span>
+                  <span class="amount">€${totalBreakdown.toFixed(2)}</span>
+                </span>
+                <span class="summary-item">
+                  <span class="label">DIFERENCIA:</span>
+                  <span class="amount">${difference > 0 ? '+' : ''}€${difference.toFixed(2)}</span>
+                </span>
               </div>
             </div>
 
@@ -680,7 +627,7 @@ export default function StepReports() {
                   <div class="date-content">
                     ${shift1Boxes.length > 0 ? `
                       <div class="shift-section">
-                        <div class="shift-title">🌅 Turno Mañana (${shift1Boxes.length} botes)</div>
+                        <div class="shift-title">TURNO MAÑANA (${shift1Boxes.length} botes)</div>
                         ${shift1Boxes.map((box, boxIndex) => {
                           const boxTotal = calculateBreakdownTotal(box.breakdown || {});
                           const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
@@ -690,50 +637,32 @@ export default function StepReports() {
                           return `
                             <div class="worker-card">
                               <div class="worker-header">
-                                <div class="worker-info">
-                                  <div class="worker-name">${box.workerName}</div>
-                                  <div class="worker-meta">
-                                    <span class="vale-amount">Vale: €${(Number(box.valeAmount) || 0).toFixed(2)}</span>
-                                    <span class="arqueo-amount">Arqueo: €${boxTotal.toFixed(2)}</span>
-                                    <span class="difference-amount ${Math.abs(boxDifference) < 0.01 ? 'balanced' : boxDifference > 0 ? 'positive' : 'negative'}">
-                                      Dif: ${boxDifference >= 0 ? '+' : ''}€${boxDifference.toFixed(2)}
-                                    </span>
-                                  </div>
-                                </div>
+                                <span class="worker-name">${box.workerName}</span>
+                                <span class="worker-meta">
+                                  <span class="vale-amount">Vale: €${(Number(box.valeAmount) || 0).toFixed(2)}</span>
+                                  <span class="arqueo-amount">Arqueo: €${boxTotal.toFixed(2)}</span>
+                                  <span class="difference-amount">Dif: ${boxDifference >= 0 ? '+' : ''}€${boxDifference.toFixed(2)}</span>
+                                </span>
                               </div>
                               ${(bills.length > 0 || coins.length > 0) ? `
                                 <div class="breakdown-section">
-                                  <div class="breakdown-title">💰 Desglose del Arqueo</div>
-                                  <div class="breakdown-grid">
-                                    ${bills.length > 0 ? `
-                                      <div class="breakdown-group">
-                                        <div class="breakdown-label">💵 Billetes</div>
-                                        <div class="breakdown-items">
-                                          ${bills.map(bill => `
-                                            <div class="breakdown-item">
-                                              <span class="denom-label">${bill.label}</span>
-                                              <span class="denom-count">${box.breakdown[bill.value]} ud.</span>
-                                              <span class="denom-total">€${(parseFloat(bill.value) * box.breakdown[bill.value]).toFixed(2)}</span>
-                                            </div>
-                                          `).join('')}
-                                        </div>
+                                  <div class="breakdown-title">DESGLOSE:</div>
+                                  ${bills.length > 0 ? `
+                                    <div class="breakdown-group">
+                                      <div class="breakdown-label">BILLETES:</div>
+                                      <div class="breakdown-items">
+                                        ${bills.map(bill => `<span class="breakdown-item">${bill.label}(${box.breakdown[bill.value]})</span>`).join(' ')}
                                       </div>
-                                    ` : ''}
-                                    ${coins.length > 0 ? `
-                                      <div class="breakdown-group">
-                                        <div class="breakdown-label">🪙 Monedas</div>
-                                        <div class="breakdown-items">
-                                          ${coins.map(coin => `
-                                            <div class="breakdown-item">
-                                              <span class="denom-label">${coin.label}</span>
-                                              <span class="denom-count">${box.breakdown[coin.value]} ud.</span>
-                                              <span class="denom-total">€${(parseFloat(coin.value) * box.breakdown[coin.value]).toFixed(2)}</span>
-                                            </div>
-                                          `).join('')}
-                                        </div>
+                                    </div>
+                                  ` : ''}
+                                  ${coins.length > 0 ? `
+                                    <div class="breakdown-group">
+                                      <div class="breakdown-label">MONEDAS:</div>
+                                      <div class="breakdown-items">
+                                        ${coins.map(coin => `<span class="breakdown-item">${coin.label}(${box.breakdown[coin.value]})</span>`).join(' ')}
                                       </div>
-                                    ` : ''}
-                                  </div>
+                                    </div>
+                                  ` : ''}
                                 </div>
                               ` : ''}
                             </div>
@@ -744,7 +673,7 @@ export default function StepReports() {
                     
                     ${shift2Boxes.length > 0 ? `
                       <div class="shift-section">
-                        <div class="shift-title">🌙 Turno Tarde (${shift2Boxes.length} botes)</div>
+                        <div class="shift-title">TURNO TARDE (${shift2Boxes.length} botes)</div>
                         ${shift2Boxes.map((box, boxIndex) => {
                           const boxTotal = calculateBreakdownTotal(box.breakdown || {});
                           const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
@@ -754,50 +683,32 @@ export default function StepReports() {
                           return `
                             <div class="worker-card">
                               <div class="worker-header">
-                                <div class="worker-info">
-                                  <div class="worker-name">${box.workerName}</div>
-                                  <div class="worker-meta">
-                                    <span class="vale-amount">Vale: €${(Number(box.valeAmount) || 0).toFixed(2)}</span>
-                                    <span class="arqueo-amount">Arqueo: €${boxTotal.toFixed(2)}</span>
-                                    <span class="difference-amount ${Math.abs(boxDifference) < 0.01 ? 'balanced' : boxDifference > 0 ? 'positive' : 'negative'}">
-                                      Dif: ${boxDifference >= 0 ? '+' : ''}€${boxDifference.toFixed(2)}
-                                    </span>
-                                  </div>
-                                </div>
+                                <span class="worker-name">${box.workerName}</span>
+                                <span class="worker-meta">
+                                  <span class="vale-amount">Vale: €${(Number(box.valeAmount) || 0).toFixed(2)}</span>
+                                  <span class="arqueo-amount">Arqueo: €${boxTotal.toFixed(2)}</span>
+                                  <span class="difference-amount">Dif: ${boxDifference >= 0 ? '+' : ''}€${boxDifference.toFixed(2)}</span>
+                                </span>
                               </div>
                               ${(bills.length > 0 || coins.length > 0) ? `
                                 <div class="breakdown-section">
-                                  <div class="breakdown-title">💰 Desglose del Arqueo</div>
-                                  <div class="breakdown-grid">
-                                    ${bills.length > 0 ? `
-                                      <div class="breakdown-group">
-                                        <div class="breakdown-label">💵 Billetes</div>
-                                        <div class="breakdown-items">
-                                          ${bills.map(bill => `
-                                            <div class="breakdown-item">
-                                              <span class="denom-label">${bill.label}</span>
-                                              <span class="denom-count">${box.breakdown[bill.value]} ud.</span>
-                                              <span class="denom-total">€${(parseFloat(bill.value) * box.breakdown[bill.value]).toFixed(2)}</span>
-                                            </div>
-                                          `).join('')}
-                                        </div>
+                                  <div class="breakdown-title">DESGLOSE:</div>
+                                  ${bills.length > 0 ? `
+                                    <div class="breakdown-group">
+                                      <div class="breakdown-label">BILLETES:</div>
+                                      <div class="breakdown-items">
+                                        ${bills.map(bill => `<span class="breakdown-item">${bill.label}(${box.breakdown[bill.value]})</span>`).join(' ')}
                                       </div>
-                                    ` : ''}
-                                    ${coins.length > 0 ? `
-                                      <div class="breakdown-group">
-                                        <div class="breakdown-label">🪙 Monedas</div>
-                                        <div class="breakdown-items">
-                                          ${coins.map(coin => `
-                                            <div class="breakdown-item">
-                                              <span class="denom-label">${coin.label}</span>
-                                              <span class="denom-count">${box.breakdown[coin.value]} ud.</span>
-                                              <span class="denom-total">€${(parseFloat(coin.value) * box.breakdown[coin.value]).toFixed(2)}</span>
-                                            </div>
-                                          `).join('')}
-                                        </div>
+                                    </div>
+                                  ` : ''}
+                                  ${coins.length > 0 ? `
+                                    <div class="breakdown-group">
+                                      <div class="breakdown-label">MONEDAS:</div>
+                                      <div class="breakdown-items">
+                                        ${coins.map(coin => `<span class="breakdown-item">${coin.label}(${box.breakdown[coin.value]})</span>`).join(' ')}
                                       </div>
-                                    ` : ''}
-                                  </div>
+                                    </div>
+                                  ` : ''}
                                 </div>
                               ` : ''}
                             </div>
@@ -833,59 +744,44 @@ export default function StepReports() {
 
   const renderByBoxesReport = () => (
     <div className="space-y-6">
-      {/* Modern Summary Cards with Vivid Gradients */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white">
-          <div className="h-1 bg-gradient-to-r from-cyan-300 via-blue-200 to-indigo-300"></div>
-          <CardContent className="pt-6 relative">
-            <div className="absolute top-4 right-4 opacity-20">
-              <FileText className="h-12 w-12" />
-            </div>
-            <div className="relative z-10">
-              <p className="text-blue-100 text-sm font-medium mb-2">💰 Total Vales</p>
-              <p className="text-3xl font-bold mb-1">€{totalVales.toFixed(2)}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 text-white">
-          <div className="h-1 bg-gradient-to-r from-green-300 via-emerald-200 to-teal-300"></div>
-          <CardContent className="pt-6 relative">
-            <div className="absolute top-4 right-4 opacity-20">
-              <Calculator className="h-12 w-12" />
-            </div>
-            <div className="relative z-10">
-              <p className="text-emerald-100 text-sm font-medium mb-2">🔢 Total Contado</p>
-              <p className="text-3xl font-bold mb-1">€{totalBreakdown.toFixed(2)}</p>
+      {/* Minimalist Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="border border-gray-300">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Total Vales</p>
+                <p className="text-xl font-bold text-black">€{totalVales.toFixed(2)}</p>
+              </div>
+              <FileText className="h-6 w-6 text-gray-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`overflow-hidden shadow-lg border-0 text-white ${
-          difference === 0 
-            ? 'bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-600' 
-            : difference > 0 
-            ? 'bg-gradient-to-br from-purple-400 via-violet-500 to-indigo-600' 
-            : 'bg-gradient-to-br from-red-400 via-pink-500 to-rose-600'
-        }`}>
-          <div className={`h-1 bg-gradient-to-r ${
-            difference === 0 
-              ? 'from-teal-300 via-cyan-200 to-blue-300' 
-              : difference > 0 
-              ? 'from-purple-300 via-violet-200 to-indigo-300' 
-              : 'from-red-300 via-pink-200 to-rose-300'
-          }`}></div>
-          <CardContent className="pt-6 relative">
-            <div className="absolute top-4 right-4 opacity-20 text-4xl">
-              {difference === 0 ? '✨' : difference > 0 ? '📈' : '📉'}
+        <Card className="border border-gray-300">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Total Contado</p>
+                <p className="text-xl font-bold text-black">€{totalBreakdown.toFixed(2)}</p>
+              </div>
+              <Calculator className="h-6 w-6 text-gray-400" />
             </div>
-            <div className="relative z-10">
-              <p className="text-white/80 text-sm font-medium mb-2">
-                {difference === 0 ? '✅ Perfecto' : difference > 0 ? '📊 Diferencia' : '⚠️ Diferencia'}
-              </p>
-              <p className="text-3xl font-bold mb-1">
-                {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
-              </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-gray-300">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Diferencia</p>
+                <p className="text-xl font-bold text-black">
+                  {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
+                </p>
+              </div>
+              <span className="text-lg text-gray-400">
+                {difference === 0 ? '=' : difference > 0 ? '+' : '-'}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -981,72 +877,56 @@ export default function StepReports() {
 
     return (
       <div className="space-y-6">
-        {/* Modern Gradient Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white">
-            <div className="h-1 bg-gradient-to-r from-cyan-300 via-blue-200 to-indigo-300"></div>
-            <CardContent className="pt-6 relative">
-              <div className="absolute top-4 right-4 opacity-20">
-                <FileText className="h-12 w-12" />
-              </div>
-              <div className="relative z-10">
-                <p className="text-blue-100 text-sm font-medium mb-2">💰 Total Vales</p>
-                <p className="text-3xl font-bold mb-1">€{totalVales.toFixed(2)}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 text-white">
-            <div className="h-1 bg-gradient-to-r from-green-300 via-emerald-200 to-teal-300"></div>
-            <CardContent className="pt-6 relative">
-              <div className="absolute top-4 right-4 opacity-20">
-                <Calculator className="h-12 w-12" />
-              </div>
-              <div className="relative z-10">
-                <p className="text-emerald-100 text-sm font-medium mb-2">🔢 Total Contado</p>
-                <p className="text-3xl font-bold mb-1">€{totalBreakdown.toFixed(2)}</p>
+        {/* Minimalist Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="border border-gray-300">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Vales</p>
+                  <p className="text-xl font-bold text-black">€{totalVales.toFixed(2)}</p>
+                </div>
+                <FileText className="h-6 w-6 text-gray-400" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className={`overflow-hidden shadow-lg border-0 text-white ${
-            difference === 0 
-              ? 'bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-600' 
-              : difference > 0 
-              ? 'bg-gradient-to-br from-purple-400 via-violet-500 to-indigo-600' 
-              : 'bg-gradient-to-br from-red-400 via-pink-500 to-rose-600'
-          }`}>
-            <div className={`h-1 bg-gradient-to-r ${
-              difference === 0 
-                ? 'from-teal-300 via-cyan-200 to-blue-300' 
-                : difference > 0 
-                ? 'from-purple-300 via-violet-200 to-indigo-300' 
-                : 'from-red-300 via-pink-200 to-rose-300'
-            }`}></div>
-            <CardContent className="pt-6 relative">
-              <div className="absolute top-4 right-4 opacity-20 text-4xl">
-                {difference === 0 ? '✨' : difference > 0 ? '📈' : '📉'}
+          <Card className="border border-gray-300">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Contado</p>
+                  <p className="text-xl font-bold text-black">€{totalBreakdown.toFixed(2)}</p>
+                </div>
+                <Calculator className="h-6 w-6 text-gray-400" />
               </div>
-              <div className="relative z-10">
-                <p className="text-white/80 text-sm font-medium mb-2">
-                  {difference === 0 ? '✅ Perfecto' : difference > 0 ? '📊 Diferencia' : '⚠️ Diferencia'}
-                </p>
-                <p className="text-3xl font-bold mb-1">
-                  {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
-                </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-gray-300">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Diferencia</p>
+                  <p className="text-xl font-bold text-black">
+                    {difference > 0 ? '+' : ''}€{difference.toFixed(2)}
+                  </p>
+                </div>
+                <span className="text-lg text-gray-400">
+                  {difference === 0 ? '=' : difference > 0 ? '+' : '-'}
+                </span>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Generate Detailed Report Button */}
-        <div className="text-center bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
-            <span className="text-2xl">📅</span>
-            Informe Detallado por Fecha
+        {/* Generate Report Button */}
+        <div className="text-center border border-gray-300 p-6 bg-gray-50">
+          <h3 className="text-lg font-bold text-black mb-2">
+            INFORME DETALLADO POR FECHA
           </h3>
-          <p className="text-gray-600 mb-6">
-            Genera un informe completo con desglose detallado de billetes y monedas organizado por fechas y turnos
+          <p className="text-gray-600 text-sm mb-4">
+            Genera un informe completo con desglose detallado de billetes y monedas
           </p>
           <Button 
             onClick={() => {
@@ -1056,10 +936,10 @@ export default function StepReports() {
                 reportWindow.document.close();
               }
             }}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            className="bg-black hover:bg-gray-800 text-white px-6 py-2 border border-black"
           >
-            <FileText className="mr-2 h-5 w-5" />
-            🚀 Generar Informe por Fecha
+            <FileText className="mr-2 h-4 w-4" />
+            GENERAR INFORME
           </Button>
         </div>
 
