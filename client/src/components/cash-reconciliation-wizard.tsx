@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useReconciliation } from "@/context/reconciliation-context";
-import ProgressIndicator from "./progress-indicator";
-import StepConfiguration from "./step-configuration";
-import StepCashBoxEntry from "./step-cash-box-entry";
-import StepValidation from "./step-validation";
-import StepReport from "./step-report";
+import ProgressIndicator from "@/components/progress-indicator";
+import StepConfiguration from "@/components/step-configuration";
+import StepCashBoxEntry from "@/components/step-cash-box-entry";
+import StepValidation from "@/components/step-validation";
+import StepReport from "@/components/step-report";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import CashBreakdownForm from "./cash-breakdown-form";
+import CashBreakdownForm from "@/components/cash-breakdown-form";
 import { ArrowLeft, ArrowRight, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { type CashBoxFormData } from "@shared/schema";

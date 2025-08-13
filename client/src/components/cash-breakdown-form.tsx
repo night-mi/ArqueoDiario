@@ -11,7 +11,7 @@ export default function CashBreakdownForm({ form }: CashBreakdownFormProps) {
   const bills = DENOMINATIONS.filter(d => d.type === "bill");
   const coins = DENOMINATIONS.filter(d => d.type === "coin");
 
-  const renderDenominationGrid = (denominations: typeof DENOMINATIONS) => (
+  const renderDenominationGrid = (denominations: any[]) => (
     <div className="grid grid-cols-3 gap-3 text-sm">
       {denominations.map((denomination) => (
         <div key={denomination.value}>
