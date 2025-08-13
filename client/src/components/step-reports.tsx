@@ -241,63 +241,100 @@ export default function StepReports() {
   };
 
   const generatePrintableByDate = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number, auditorName: string) => {
-    // Group cash boxes by date, then by shift
-    const groupedData: Record<string, Record<number, any[]>> = {};
-    
+    // Group cash boxes by date
+    const groupedByDate: Record<string, any[]> = {};
     cashBoxes.forEach(box => {
-      const date = box.date;
-      const shift = box.shift;
-      
-      if (!groupedData[date]) {
-        groupedData[date] = {};
+      if (!groupedByDate[box.date]) {
+        groupedByDate[box.date] = [];
       }
-      if (!groupedData[date][shift]) {
-        groupedData[date][shift] = [];
-      }
-      groupedData[date][shift].push(box);
+      groupedByDate[box.date].push(box);
     });
 
-    const sortedDates = Object.keys(groupedData).sort();
-    const uniqueDates = Array.from(new Set(cashBoxes.map(box => box.date))).sort();
+    const sortedDates = Object.keys(groupedByDate).sort();
 
     let dateContent = '';
     
     sortedDates.forEach(date => {
-      const shifts = groupedData[date];
+      const dateCashBoxes = groupedByDate[date];
+      
+      // Group by shift
+      const shift1Boxes = dateCashBoxes.filter(box => box.shift === 1);
+      const shift2Boxes = dateCashBoxes.filter(box => box.shift === 2);
+      
+      // Calculate totals for this date
+      const dateTotalVales = dateCashBoxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
+      const dateTotalArqueo = dateCashBoxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
+      const dateDifference = dateTotalArqueo - dateTotalVales;
+      
+      // Calculate breakdown for this date (only non-zero values)
+      const dateBreakdown: Record<string, number> = {};
+      dateCashBoxes.forEach(box => {
+        if (box.breakdown) {
+          Object.entries(box.breakdown).forEach(([denom, count]) => {
+            if ((count || 0) > 0) {
+              dateBreakdown[denom] = (dateBreakdown[denom] || 0) + (count || 0);
+            }
+          });
+        }
+      });
+
+      const nonZeroDateBreakdown = Object.entries(dateBreakdown)
+        .filter(([_, count]) => count > 0)
+        .map(([denomination, count]) => {
+          const denom = DENOMINATIONS.find(d => d.value === denomination);
+          const value = count * parseFloat(denomination);
+          return {
+            label: denom?.label || denomination,
+            count,
+            value,
+            denomination: parseFloat(denomination)
+          };
+        })
+        .sort((a, b) => b.denomination - a.denomination);
+
       dateContent += `
         <div class="date-section">
           <h3>FECHA: ${date}</h3>
       `;
       
-      let dateTotalVales = 0;
-      let dateTotalArqueo = 0;
+      // Shift 1
+      if (shift1Boxes.length > 0) {
+        dateContent += `<h4>TURNO 1 (Mañana) (${shift1Boxes.length} botes):</h4><ul>`;
+        shift1Boxes.forEach((box) => {
+          const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+          const valeAmount = Number(box.valeAmount) || 0;
+          dateContent += `<li><strong>${box.workerName}</strong>: Vale €${valeAmount.toFixed(2)} + Arqueo €${boxTotal.toFixed(2)}</li>`;
+        });
+        const shift1TotalVales = shift1Boxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
+        const shift1TotalArqueo = shift1Boxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
+        dateContent += `</ul><p><strong>TOTAL TURNO 1: Vales €${shift1TotalVales.toFixed(2)} | Arqueo €${shift1TotalArqueo.toFixed(2)}</strong></p>`;
+      }
       
-      [1, 2].forEach(shiftNumber => {
-        if (shifts[shiftNumber]) {
-          const shiftName = shiftNumber === 1 ? 'TURNO 1 (Mañana)' : 'TURNO 2 (Tarde)';
-          dateContent += `<h4>${shiftName}:</h4><ul>`;
-          
-          let shiftTotalVales = 0;
-          let shiftTotalArqueo = 0;
-          
-          shifts[shiftNumber].forEach((box, index) => {
-            const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-            const valeAmount = Number(box.valeAmount) || 0;
-            
-            shiftTotalVales += valeAmount;
-            shiftTotalArqueo += boxTotal;
-            
-            dateContent += `<li>${box.workerName} - Bote ${index + 1}: Vale €${valeAmount.toFixed(2)} - Arqueo €${boxTotal.toFixed(2)}</li>`;
-          });
-          
-          dateContent += `</ul><p><strong>TOTAL ${shiftName}: Vales €${shiftTotalVales.toFixed(2)} - Arqueo €${shiftTotalArqueo.toFixed(2)}</strong></p>`;
-          
-          dateTotalVales += shiftTotalVales;
-          dateTotalArqueo += shiftTotalArqueo;
-        }
-      });
+      // Shift 2
+      if (shift2Boxes.length > 0) {
+        dateContent += `<h4>TURNO 2 (Tarde) (${shift2Boxes.length} botes):</h4><ul>`;
+        shift2Boxes.forEach((box) => {
+          const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+          const valeAmount = Number(box.valeAmount) || 0;
+          dateContent += `<li><strong>${box.workerName}</strong>: Vale €${valeAmount.toFixed(2)} + Arqueo €${boxTotal.toFixed(2)}</li>`;
+        });
+        const shift2TotalVales = shift2Boxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
+        const shift2TotalArqueo = shift2Boxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
+        dateContent += `</ul><p><strong>TOTAL TURNO 2: Vales €${shift2TotalVales.toFixed(2)} | Arqueo €${shift2TotalArqueo.toFixed(2)}</strong></p>`;
+      }
       
-      dateContent += `<p class="date-total"><strong>TOTAL ${date}: Vales €${dateTotalVales.toFixed(2)} - Arqueo €${dateTotalArqueo.toFixed(2)} - Diferencia €${(dateTotalArqueo - dateTotalVales).toFixed(2)}</strong></p></div>`;
+      dateContent += `<p class="date-total"><strong>TOTAL ${date}: Vales €${dateTotalVales.toFixed(2)} | Arqueo €${dateTotalArqueo.toFixed(2)} | Diferencia €${dateDifference.toFixed(2)}</strong></p>`;
+      
+      // Add breakdown for this date
+      if (nonZeroDateBreakdown.length > 0) {
+        dateContent += `<div class="breakdown-section"><h5>Arqueo Combinado - ${date}</h5><ul>`;
+        nonZeroDateBreakdown.forEach(item => {
+          dateContent += `<li>${item.label}: ${item.count} unidades = €${item.value.toFixed(2)}</li>`;
+        });
+        dateContent += `</ul><p><strong>Total Arqueo Combinado: €${nonZeroDateBreakdown.reduce((sum, item) => sum + item.value, 0).toFixed(2)}</strong></p></div>`;
+      }
+      
+      dateContent += `</div>`;
     });
 
     return `
@@ -311,8 +348,10 @@ export default function StepReports() {
           h2, h3 { border-bottom: 2px solid #333; padding-bottom: 5px; }
           h4 { color: #555; margin: 15px 0 5px 20px; }
           .header-info { margin-bottom: 20px; }
-          .date-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+          .date-section { margin: 20px 0; padding: 15px; border: 2px solid #2563eb; }
           .date-total { background-color: #e8f4f8; padding: 10px; font-weight: bold; }
+          .breakdown-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; }
+          h5 { color: #059669; margin-bottom: 10px; }
           ul { margin: 5px 0 10px 40px; }
           li { margin: 5px 0; }
           .footer { margin-top: 30px; font-size: 12px; text-align: center; }
@@ -325,7 +364,8 @@ export default function StepReports() {
         <div class="header-info">
           <p><strong>Responsable:</strong> ${auditorName}</p>
           <p><strong>Botes Procesados:</strong> ${cashBoxes.length}</p>
-          <p><strong>Fechas incluidas:</strong> ${uniqueDates.join(', ')}</p>
+          <p><strong>Fechas incluidas:</strong> ${sortedDates.join(', ')}</p>
+          <p><strong>Total General:</strong> Vales €${totalVales.toFixed(2)} | Arqueo €${totalBreakdown.toFixed(2)} | Diferencia €${difference.toFixed(2)}</p>
         </div>
 
         <h2>DESGLOSE POR FECHAS Y TURNOS</h2>
@@ -429,7 +469,11 @@ export default function StepReports() {
                         value: value
                       };
                     })
-                    .sort((a, b) => parseFloat(b.label.replace('€', '').replace(' cént.', '')) - parseFloat(a.label.replace('€', '').replace(' cént.', '')));
+                    .sort((a, b) => {
+                      const valueA = parseFloat(a.label.replace('€', '').replace(' cént.', ''));
+                      const valueB = parseFloat(b.label.replace('€', '').replace(' cént.', ''));
+                      return valueB - valueA;
+                    });
                   
                   return (
                     <TableRow key={index}>
@@ -476,121 +520,191 @@ export default function StepReports() {
     </div>
   );
 
-  const renderByDateReport = () => (
-    <div className="space-y-6">
-      {/* Date Summary */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h4 className="text-lg font-semibold text-gray-900">
-                Informe por Fecha: {validCashBoxes[0]?.date || new Date().toISOString().split('T')[0]}
-              </h4>
-              <p className="text-sm text-gray-600">
-                Responsable: {state.auditorName} | {validCashBoxes.length} botes procesados
-              </p>
-            </div>
-            <Calendar className="text-primary h-8 w-8" />
-          </div>
+  const renderByDateReport = () => {
+    // Group cash boxes by date
+    const groupedByDate: Record<string, any[]> = {};
+    validCashBoxes.forEach(box => {
+      if (!groupedByDate[box.date]) {
+        groupedByDate[box.date] = [];
+      }
+      groupedByDate[box.date].push(box);
+    });
 
-          {/* Totals Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">Botes</p>
-              <p className="text-xl font-bold text-gray-900">{validCashBoxes.length}</p>
-            </div>
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-600">Total Vales</p>
-              <p className="text-xl font-bold text-blue-900">€{totalVales.toFixed(2)}</p>
-            </div>
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <p className="text-sm text-green-600">Total Arqueo</p>
-              <p className="text-xl font-bold text-green-900">€{totalBreakdown.toFixed(2)}</p>
-            </div>
-            <div className={`text-center p-3 rounded-lg ${
-              Math.abs(difference) > 0.01 ? "bg-orange-50" : "bg-green-50"
-            }`}>
-              <p className={`text-sm ${Math.abs(difference) > 0.01 ? "text-orange-600" : "text-green-600"}`}>
-                Diferencia
-              </p>
-              <p className={`text-xl font-bold ${Math.abs(difference) > 0.01 ? "text-orange-900" : "text-green-900"}`}>
-                €{difference.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    const sortedDates = Object.keys(groupedByDate).sort();
 
-      {/* Detailed Breakdown */}
-      <Card>
-        <CardContent className="p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">
-            Desglose Total de Denominaciones
-          </h4>
+    return (
+      <div className="space-y-6">
+        {/* Global Summary */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900">
+                  Informe Consolidado por Fechas
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Responsable: {state.auditorName} | {validCashBoxes.length} botes procesados | {sortedDates.length} fechas
+                </p>
+              </div>
+              <Calendar className="text-primary h-8 w-8" />
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Bills */}
-            <div>
-              <h5 className="text-md font-medium text-gray-800 mb-3">Billetes</h5>
-              <div className="space-y-2">
-                {bills.map((bill) => {
-                  const count = globalBreakdown[bill.value] || 0;
-                  const value = count * parseFloat(bill.value);
-                  
-                  return (
-                    <div key={bill.value} className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">{bill.label}</span>
-                      <div className="text-right">
-                        <span className="font-medium">{count} unidades</span>
-                        <div className="text-sm text-gray-500">€{value.toFixed(2)}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-                <div className="flex justify-between items-center py-2 font-semibold border-t-2 border-gray-200">
-                  <span>Total Billetes:</span>
-                  <span className="text-primary">
-                    €{bills.reduce((sum, bill) => 
-                      sum + ((globalBreakdown[bill.value] || 0) * parseFloat(bill.value)), 0
-                    ).toFixed(2)}
-                  </span>
-                </div>
+            {/* Global Totals */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">Total Botes</p>
+                <p className="text-xl font-bold text-gray-900">{validCashBoxes.length}</p>
+              </div>
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-600">Total Vales</p>
+                <p className="text-xl font-bold text-blue-900">€{totalVales.toFixed(2)}</p>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <p className="text-sm text-green-600">Total Arqueo</p>
+                <p className="text-xl font-bold text-green-900">€{totalBreakdown.toFixed(2)}</p>
+              </div>
+              <div className={`text-center p-3 rounded-lg ${
+                Math.abs(difference) > 0.01 ? "bg-orange-50" : "bg-green-50"
+              }`}>
+                <p className={`text-sm ${Math.abs(difference) > 0.01 ? "text-orange-600" : "text-green-600"}`}>
+                  Diferencia Total
+                </p>
+                <p className={`text-xl font-bold ${Math.abs(difference) > 0.01 ? "text-orange-900" : "text-green-900"}`}>
+                  €{difference.toFixed(2)}
+                </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Coins */}
-            <div>
-              <h5 className="text-md font-medium text-gray-800 mb-3">Monedas</h5>
-              <div className="space-y-2">
-                {coins.map((coin) => {
-                  const count = globalBreakdown[coin.value] || 0;
-                  const value = count * parseFloat(coin.value);
-                  
-                  return (
-                    <div key={coin.value} className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600">{coin.label}</span>
-                      <div className="text-right">
-                        <span className="font-medium">{count} unidades</span>
-                        <div className="text-sm text-gray-500">€{value.toFixed(2)}</div>
+        {/* Date-by-Date Breakdown */}
+        {sortedDates.map(date => {
+          const dateCashBoxes = groupedByDate[date];
+          
+          // Group by shift
+          const shift1Boxes = dateCashBoxes.filter(box => box.shift === 1);
+          const shift2Boxes = dateCashBoxes.filter(box => box.shift === 2);
+          
+          // Calculate totals for this date
+          const dateTotalVales = dateCashBoxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
+          const dateTotalArqueo = dateCashBoxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
+          const dateDifference = dateTotalArqueo - dateTotalVales;
+          
+          // Calculate breakdown for this date (only non-zero values)
+          const dateBreakdown: Record<string, number> = {};
+          dateCashBoxes.forEach(box => {
+            if (box.breakdown) {
+              Object.entries(box.breakdown).forEach(([denom, count]) => {
+                if ((count || 0) > 0) {
+                  dateBreakdown[denom] = (dateBreakdown[denom] || 0) + (count || 0);
+                }
+              });
+            }
+          });
+
+          const nonZeroDateBreakdown = Object.entries(dateBreakdown)
+            .filter(([_, count]) => count > 0)
+            .map(([denomination, count]) => {
+              const denom = DENOMINATIONS.find(d => d.value === denomination);
+              const value = count * parseFloat(denomination);
+              return {
+                label: denom?.label || denomination,
+                count,
+                value,
+                denomination: parseFloat(denomination)
+              };
+            })
+            .sort((a, b) => b.denomination - a.denomination);
+
+          return (
+            <Card key={date} className="border-2 border-blue-200">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 border-b-2 border-gray-300 pb-2">
+                  FECHA: {date}
+                </h3>
+                
+                {/* Shift 1 */}
+                {shift1Boxes.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold text-blue-800 mb-3">
+                      TURNO 1 (Mañana) ({shift1Boxes.length} botes)
+                    </h4>
+                    <div className="ml-4 space-y-2">
+                      {shift1Boxes.map((box, index) => {
+                        const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+                        const valeAmount = Number(box.valeAmount) || 0;
+                        return (
+                          <div key={index} className="text-sm">
+                            <span className="font-medium">{box.workerName}</span>: 
+                            <span className="ml-2">Vale €{valeAmount.toFixed(2)} + Arqueo €{boxTotal.toFixed(2)}</span>
+                          </div>
+                        );
+                      })}
+                      <div className="font-semibold text-blue-700 mt-2 pt-2 border-t border-blue-200">
+                        TOTAL TURNO 1: Vales €{shift1Boxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0).toFixed(2)} | 
+                        Arqueo €{shift1Boxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0).toFixed(2)}
                       </div>
                     </div>
-                  );
-                })}
-                <div className="flex justify-between items-center py-2 font-semibold border-t-2 border-gray-200">
-                  <span>Total Monedas:</span>
-                  <span className="text-primary">
-                    €{coins.reduce((sum, coin) => 
-                      sum + ((globalBreakdown[coin.value] || 0) * parseFloat(coin.value)), 0
-                    ).toFixed(2)}
-                  </span>
+                  </div>
+                )}
+
+                {/* Shift 2 */}
+                {shift2Boxes.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold text-orange-800 mb-3">
+                      TURNO 2 (Tarde) ({shift2Boxes.length} botes)
+                    </h4>
+                    <div className="ml-4 space-y-2">
+                      {shift2Boxes.map((box, index) => {
+                        const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+                        const valeAmount = Number(box.valeAmount) || 0;
+                        return (
+                          <div key={index} className="text-sm">
+                            <span className="font-medium">{box.workerName}</span>: 
+                            <span className="ml-2">Vale €{valeAmount.toFixed(2)} + Arqueo €{boxTotal.toFixed(2)}</span>
+                          </div>
+                        );
+                      })}
+                      <div className="font-semibold text-orange-700 mt-2 pt-2 border-t border-orange-200">
+                        TOTAL TURNO 2: Vales €{shift2Boxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0).toFixed(2)} | 
+                        Arqueo €{shift2Boxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0).toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Date Total */}
+                <div className="bg-gray-100 p-4 rounded-lg mb-4">
+                  <div className="font-bold text-lg text-gray-900">
+                    TOTAL {date}: Vales €{dateTotalVales.toFixed(2)} | Arqueo €{dateTotalArqueo.toFixed(2)} | 
+                    Diferencia €{dateDifference.toFixed(2)}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+
+                {/* Date Breakdown - Only fields with values */}
+                {nonZeroDateBreakdown.length > 0 && (
+                  <div className="border-t pt-4">
+                    <h5 className="font-semibold text-gray-800 mb-3">Arqueo Combinado - {date}</h5>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {nonZeroDateBreakdown.map((item, index) => (
+                        <div key={index} className="bg-green-50 p-2 rounded text-sm">
+                          <div className="font-medium text-green-800">{item.label}</div>
+                          <div className="text-green-600">{item.count} unidades = €{item.value.toFixed(2)}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 font-semibold text-green-800">
+                      Total Arqueo Combinado: €{nonZeroDateBreakdown.reduce((sum, item) => sum + item.value, 0).toFixed(2)}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
