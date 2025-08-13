@@ -196,6 +196,7 @@ export default function StepReports() {
               <th>Turno</th>
               <th>Vale</th>
               <th>Arqueo</th>
+              <th>Desglose del Arqueo</th>
               <th>Diferencia</th>
               <th>Estado</th>
             </tr>
@@ -204,6 +205,16 @@ export default function StepReports() {
             ${cashBoxes.map((box, index) => {
               const boxTotal = calculateBreakdownTotal(box.breakdown || {});
               const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
+              
+              // Get breakdown with only non-zero values for print
+              const nonZeroBreakdown = Object.entries(box.breakdown || {})
+                .filter(([_, count]) => (count || 0) > 0)
+                .map(([denomination, count]) => {
+                  const denom = DENOMINATIONS.find(d => d.value === denomination);
+                  const value = (count || 0) * parseFloat(denomination);
+                  return `${denom?.label || denomination}: ${count} = €${value.toFixed(2)}`;
+                }).join('<br>');
+              
               return `
                 <tr>
                   <td>Bote ${index + 1}</td>
@@ -212,6 +223,7 @@ export default function StepReports() {
                   <td>${box.shift === 1 ? 'Mañana' : 'Tarde'}</td>
                   <td>€${(Number(box.valeAmount) || 0).toFixed(2)}</td>
                   <td>€${boxTotal.toFixed(2)}</td>
+                  <td style="font-size: 11px;">${nonZeroBreakdown || 'Sin desglose'}</td>
                   <td>€${boxDifference.toFixed(2)}</td>
                   <td>${Math.abs(boxDifference) > 0.01 ? 'Con diferencias' : 'Correcto'}</td>
                 </tr>
@@ -394,6 +406,7 @@ export default function StepReports() {
                   <TableHead>Turno</TableHead>
                   <TableHead>Vale (€)</TableHead>
                   <TableHead>Arqueo (€)</TableHead>
+                  <TableHead>Desglose del Arqueo</TableHead>
                   <TableHead>Diferencia (€)</TableHead>
                   <TableHead>Estado</TableHead>
                 </TableRow>
@@ -403,6 +416,20 @@ export default function StepReports() {
                   const boxTotal = calculateBreakdownTotal(box.breakdown || {});
                   const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
                   const hasDiscrepancy = Math.abs(boxDifference) > 0.01;
+                  
+                  // Get breakdown with only non-zero values
+                  const nonZeroBreakdown = Object.entries(box.breakdown || {})
+                    .filter(([_, count]) => (count || 0) > 0)
+                    .map(([denomination, count]) => {
+                      const denom = DENOMINATIONS.find(d => d.value === denomination);
+                      const value = (count || 0) * parseFloat(denomination);
+                      return {
+                        label: denom?.label || denomination,
+                        count: count || 0,
+                        value: value
+                      };
+                    })
+                    .sort((a, b) => parseFloat(b.label.replace('€', '').replace(' cént.', '')) - parseFloat(a.label.replace('€', '').replace(' cént.', '')));
                   
                   return (
                     <TableRow key={index}>
@@ -415,7 +442,21 @@ export default function StepReports() {
                         </Badge>
                       </TableCell>
                       <TableCell>€{(Number(box.valeAmount) || 0).toFixed(2)}</TableCell>
-                      <TableCell>€{boxTotal.toFixed(2)}</TableCell>
+                      <TableCell className="font-semibold">€{boxTotal.toFixed(2)}</TableCell>
+                      <TableCell className="max-w-xs">
+                        {nonZeroBreakdown.length > 0 ? (
+                          <div className="text-xs space-y-1">
+                            {nonZeroBreakdown.map((item, idx) => (
+                              <div key={idx} className="flex justify-between">
+                                <span className="text-gray-600">{item.label}:</span>
+                                <span className="font-medium">{item.count} = €{item.value.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs">Sin desglose</span>
+                        )}
+                      </TableCell>
                       <TableCell className={hasDiscrepancy ? "text-orange-600" : "text-green-600"}>
                         €{boxDifference.toFixed(2)}
                       </TableCell>
