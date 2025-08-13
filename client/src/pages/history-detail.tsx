@@ -21,6 +21,7 @@ import {
   Calculator
 } from "lucide-react";
 import { Link, useParams } from "wouter";
+import { HomeButton } from "@/components/home-button";
 import type { ReconciliationSession, CashBox } from "@shared/schema";
 
 interface HistoryDetailData {
@@ -130,12 +131,15 @@ export default function HistoryDetailPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <Link href="/history">
-              <Button variant="outline" className="mb-4">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver al Historial
-              </Button>
-            </Link>
+            <div className="flex gap-2 mb-4">
+              <Link href="/history">
+                <Button variant="outline">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Volver al Historial
+                </Button>
+              </Link>
+              <HomeButton variant="home" />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
               <FileText className="mr-3 h-8 w-8 text-primary" />
               Detalles del Arqueo

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { History, Plus } from "lucide-react";
 import { Link } from "wouter";
+import { HomeButton } from "@/components/home-button";
 
 export default function Home() {
   return (
@@ -19,12 +20,15 @@ export default function Home() {
                 Gestión completa de reconciliación de cajas registradoras
               </p>
             </div>
-            <Link href="/history">
-              <Button variant="outline">
-                <History className="mr-2 h-4 w-4" />
-                Ver Historial
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              <HomeButton variant="reset" />
+              <Link href="/history">
+                <Button variant="outline">
+                  <History className="mr-2 h-4 w-4" />
+                  Ver Historial
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

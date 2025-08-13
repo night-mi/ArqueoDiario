@@ -24,6 +24,7 @@ import {
   BarChart3
 } from "lucide-react";
 import { Link } from "wouter";
+import { HomeButton } from "@/components/home-button";
 import type { ReconciliationSession } from "@shared/schema";
 
 export default function HistoryPage() {
@@ -101,11 +102,14 @@ export default function HistoryPage() {
               Consulta todos los arqueos realizados anteriormente
             </p>
           </div>
-          <Link href="/">
-            <Button variant="outline">
-              Nuevo Arqueo
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <HomeButton variant="home" />
+            <Link href="/">
+              <Button variant="outline">
+                Nuevo Arqueo
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
