@@ -104,7 +104,8 @@ export function generateByDatePDF(data: PDFReportData): void {
   doc.text(`Botes Procesados: ${data.cashBoxes.length}`, 20, 45);
   
   // Get unique dates from cash boxes
-  const uniqueDates = [...new Set(data.cashBoxes.map(box => box.date))].sort();
+  const dateSet = new Set(data.cashBoxes.map(box => box.date));
+  const uniqueDates = Array.from(dateSet).sort();
   doc.text(`Fechas incluidas: ${uniqueDates.join(', ')}`, 20, 55);
   
   let currentY = 75;
