@@ -56,6 +56,26 @@ export default function StepReports() {
   };
 
   const handleExportPDF = (reportType: 'boxes' | 'date') => {
+    console.log("Iniciando exportación PDF:", reportType);
+    
+    const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
+    
+    console.log("Datos para PDF:", {
+      validCashBoxes: validCashBoxes.length,
+      totalVales,
+      totalBreakdown,
+      difference
+    });
+
+    if (validCashBoxes.length === 0) {
+      toast({
+        title: "No hay datos",
+        description: "No hay botes válidos para generar el informe.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // For date reports, use a generic date since we're grouping by individual box dates
     const reportData: PDFReportData = {
       date: new Date().toISOString().split('T')[0], // Current date for report generation
@@ -67,6 +87,8 @@ export default function StepReports() {
     };
 
     try {
+      console.log("Generando PDF...", reportType);
+      
       if (reportType === 'boxes') {
         generateByBoxesPDF(reportData);
         toast({
@@ -80,10 +102,13 @@ export default function StepReports() {
           description: "El informe por fecha se ha descargado correctamente.",
         });
       }
+      
+      console.log("PDF generado exitosamente");
     } catch (error) {
+      console.error("Error al generar PDF:", error);
       toast({
         title: "Error al generar PDF",
-        description: "Hubo un problema al generar el informe. Inténtalo de nuevo.",
+        description: `Hubo un problema al generar el informe: ${error}`,
         variant: "destructive"
       });
     }

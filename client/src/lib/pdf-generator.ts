@@ -20,7 +20,9 @@ export interface PDFReportData {
 }
 
 export function generateByBoxesPDF(data: PDFReportData): void {
-  const doc = new jsPDF();
+  console.log("Iniciando generación PDF por botes:", data);
+  try {
+    const doc = new jsPDF();
   
   // Header
   doc.setFontSize(18);
@@ -72,12 +74,20 @@ export function generateByBoxesPDF(data: PDFReportData): void {
   doc.setFontSize(10);
   doc.text(`Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, 20, finalY);
   
-  // Save the PDF
-  doc.save(`arqueo_por_botes_${data.date}.pdf`);
+    // Save the PDF
+    console.log("Guardando PDF por botes...");
+    doc.save(`arqueo_por_botes_${data.date}.pdf`);
+    console.log("PDF por botes guardado exitosamente");
+  } catch (error) {
+    console.error("Error en generateByBoxesPDF:", error);
+    throw error;
+  }
 }
 
 export function generateByDatePDF(data: PDFReportData): void {
-  const doc = new jsPDF();
+  console.log("Iniciando generación PDF por fecha:", data);
+  try {
+    const doc = new jsPDF();
   
   // Group cash boxes by date, then by shift
   const groupedData: Record<string, Record<number, CashBoxFormData[]>> = {};
@@ -261,6 +271,12 @@ export function generateByDatePDF(data: PDFReportData): void {
   doc.setFontSize(10);
   doc.text(`Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, 20, finalY);
   
-  // Save the PDF
-  doc.save(`arqueo_por_fecha_${data.date}.pdf`);
+    // Save the PDF
+    console.log("Guardando PDF por fecha...");
+    doc.save(`arqueo_por_fecha_${data.date}.pdf`);
+    console.log("PDF por fecha guardado exitosamente");
+  } catch (error) {
+    console.error("Error en generateByDatePDF:", error);
+    throw error;
+  }
 }
