@@ -35,7 +35,7 @@ export default function StepReport() {
   });
 
   const handlePrevious = () => {
-    dispatch({ type: "SET_CURRENT_STEP", payload: 3 });
+    dispatch({ type: "SET_CURRENT_STEP", payload: 4 });
   };
 
   const calculateTotals = () => {

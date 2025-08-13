@@ -5,7 +5,8 @@ const STEPS = [
   { number: 1, label: "Configuración" },
   { number: 2, label: "Registro Botes" },
   { number: 3, label: "Validación" },
-  { number: 4, label: "Informe" },
+  { number: 4, label: "Totales" },
+  { number: 5, label: "Informes" },
 ];
 
 export default function ProgressIndicator() {

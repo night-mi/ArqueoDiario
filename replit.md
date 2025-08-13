@@ -1,6 +1,6 @@
 # Overview
 
-This is a cash reconciliation management system built for tracking and managing daily cash box audits. The application is designed to help businesses process multiple cash boxes, calculate denomination breakdowns, and generate reconciliation reports. It features a multi-step wizard interface that guides users through configuration, cash box entry, validation, and final reporting phases.
+This is a comprehensive cash reconciliation management system built for tracking and managing daily cash box audits at gas stations. The application is designed to help businesses process multiple cash boxes, calculate denomination breakdowns, and generate detailed reconciliation reports. It features a 5-step wizard interface that guides users through configuration, cash box entry, validation, totals summary, and dual reporting phases with complete offline functionality.
 
 # User Preferences
 
@@ -19,7 +19,7 @@ The frontend is built with **React 18** using **TypeScript** and follows a compo
 - **Tailwind CSS**: Utility-first CSS framework for styling
 - **Shadcn/ui**: Pre-built component library built on Radix UI primitives
 
-The frontend uses a **wizard pattern** with a centralized state management approach through React Context for the reconciliation workflow. Components are organized into reusable UI components and feature-specific components for the cash reconciliation process.
+The frontend uses a **5-step wizard pattern** with a centralized state management approach through React Context for the reconciliation workflow. Components are organized into reusable UI components and feature-specific components for the cash reconciliation process. The system supports dual reporting capabilities: by individual cash boxes and by date with consolidated totals and denomination breakdowns.
 
 ## Backend Architecture
 
@@ -57,10 +57,25 @@ The backend implements a **repository pattern** through the `IStorage` interface
 
 The application uses several key design patterns:
 
-- **Wizard Pattern**: Multi-step process for cash reconciliation
-- **Repository Pattern**: Abstracted data access layer
-- **Provider Pattern**: Context providers for shared state
+- **5-Step Wizard Pattern**: Complete cash reconciliation workflow including totals summary and dual reporting
+- **Repository Pattern**: Abstracted data access layer for future database integration
+- **Provider Pattern**: Context providers for shared state management
 - **Compound Components**: Shadcn/ui components built on Radix UI primitives
+- **Real-time Calculations**: Dynamic breakdown totals and validation across all components
+- **Dual Reporting System**: Both individual cash box reports and consolidated date-based reports
+
+## Recent Changes (December 2024)
+
+### Enhanced Workflow Structure
+- **Step 4 - Totals Summary**: New step showing comprehensive breakdown of all denominations across all cash boxes
+- **Step 5 - Dual Reports**: Two distinct report formats for different business needs
+- **Real-time Calculations**: Improved calculation engine with live updates during data entry
+
+### Reporting Capabilities
+- **By Cash Boxes**: Individual analysis of each cash box with discrepancy detection
+- **By Date**: Consolidated view with total denomination breakdown and summary statistics
+- **Manual Name Entry**: Full support for custom worker names and editable auditor identification
+- **Offline Functionality**: Complete operation without internet connectivity
 
 # External Dependencies
 

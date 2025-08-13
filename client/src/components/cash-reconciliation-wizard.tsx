@@ -4,7 +4,8 @@ import ProgressIndicator from "@/components/progress-indicator";
 import StepConfiguration from "@/components/step-configuration";
 import StepCashBoxEntry from "@/components/step-cash-box-entry";
 import StepValidation from "@/components/step-validation";
-import StepReport from "@/components/step-report";
+import StepTotalsSummary from "@/components/step-totals-summary";
+import StepReports from "@/components/step-reports";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,7 +54,9 @@ export default function CashReconciliationWizard() {
       case 3:
         return <StepValidation />;
       case 4:
-        return <StepReport />;
+        return <StepTotalsSummary />;
+      case 5:
+        return <StepReports />;
       default:
         return <StepConfiguration />;
     }
