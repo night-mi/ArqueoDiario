@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calculator, Info, Lightbulb, ArrowRight, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { NameManager } from "@/components/name-manager";
 
 export default function StepConfiguration() {
   const { state, dispatch } = useReconciliation();
   const [totalCashBoxes, setTotalCashBoxes] = useState(state.totalCashBoxes || "");
+  const [auditorName, setAuditorName] = useState(state.auditorName || "");
   const { toast } = useToast();
 
   const handleContinue = () => {
@@ -24,13 +26,23 @@ export default function StepConfiguration() {
       return;
     }
 
+    if (!auditorName.trim()) {
+      toast({
+        title: "Error",
+        description: "Por favor, selecciona o escribe el nombre del auditor.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     dispatch({ type: "SET_TOTAL_CASH_BOXES", payload: count });
+    dispatch({ type: "SET_AUDITOR_NAME", payload: auditorName.trim() });
     dispatch({ type: "SET_CURRENT_STEP", payload: 2 });
     dispatch({ type: "SET_CURRENT_CASH_BOX_INDEX", payload: 0 });
     
     toast({
       title: "Configuración guardada",
-      description: `Se procesarán ${count} botes en total.`,
+      description: `Se procesarán ${count} botes. Auditor: ${auditorName.trim()}`,
     });
   };
 
@@ -112,47 +124,33 @@ export default function StepConfiguration() {
       {/* Sidebar */}
       <div className="lg:col-span-1">
         <div className="space-y-6">
-          {/* Current Status */}
-          <Card className="shadow-sm">
-            <CardContent className="p-4">
-              <h4 className="font-semibold text-gray-900 mb-4">Estado Actual</h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Botes Configurados:</span>
-                  <span className="font-medium">{state.totalCashBoxes}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Botes Procesados:</span>
-                  <span className="font-medium">0</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Progreso:</span>
-                  <span className="font-medium text-primary">25%</span>
-                </div>
-              </div>
-              
-              <div className="mt-4">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-primary h-2 rounded-full transition-all duration-300" 
-                    style={{ width: "25%" }}
-                  ></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Auditor Name Manager */}
+          <NameManager
+            type="auditor"
+            title="Auditor"
+            onNameSelect={setAuditorName}
+            selectedName={auditorName}
+          />
 
-          {/* Tips */}
-          <Card className="bg-yellow-50 border-yellow-200">
-            <CardContent className="p-4">
-              <h4 className="font-semibold text-yellow-900 mb-2 flex items-center">
-                <Lightbulb className="mr-2 h-4 w-4" />
-                Consejos
-              </h4>
-              <ul className="text-sm text-yellow-800 space-y-1">
-                <li>• Verifica cada denominación antes de continuar</li>
-                <li>• Los datos se guardan automáticamente</li>
-                <li>• Puedes volver atrás en cualquier momento</li>
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center mb-4">
+                <Lightbulb className="mr-2 h-5 w-5 text-blue-600" />
+                <h4 className="font-semibold text-blue-900">Consejos</h4>
+              </div>
+              <ul className="space-y-3 text-sm text-blue-800">
+                <li className="flex items-start">
+                  <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                  <span>Asegúrate de tener todos los botes físicos antes de comenzar</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                  <span>Cada bote puede contener múltiples turnos del mismo día</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                  <span>El sistema calculará automáticamente los totales y diferencias</span>
+                </li>
               </ul>
             </CardContent>
           </Card>

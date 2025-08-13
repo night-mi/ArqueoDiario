@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, integer, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, integer, date, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -81,3 +81,20 @@ export type ReconciliationData = {
   currentCashBoxIndex: number;
   auditorName: string;
 };
+
+// New table for saved names
+export const savedNames = pgTable("saved_names", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // 'worker' or 'auditor'
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const insertSavedNameSchema = createInsertSchema(savedNames).omit({
+  id: true,
+  createdAt: true
+});
+
+export type SavedName = typeof savedNames.$inferSelect;
+export type InsertSavedName = z.infer<typeof insertSavedNameSchema>;

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCashBoxSchema, insertReconciliationSessionSchema } from "@shared/schema";
+import { insertCashBoxSchema, insertReconciliationSessionSchema, insertSavedNameSchema } from "@shared/schema";
 import { z } from "zod";
 
 const createCashBoxesSchema = z.object({
@@ -94,6 +94,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(sessions);
     } catch (error) {
       res.status(500).json({ message: "Error fetching reconciliation sessions", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Names management routes
+  // Get saved names by type
+  app.get("/api/names/:type", async (req, res) => {
+    try {
+      const type = req.params.type as 'worker' | 'auditor';
+      if (type !== 'worker' && type !== 'auditor') {
+        return res.status(400).json({ message: "Type must be 'worker' or 'auditor'" });
+      }
+      const names = await storage.getSavedNames(type);
+      res.json(names);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching names", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Add a new saved name
+  app.post("/api/names", async (req, res) => {
+    try {
+      const nameData = insertSavedNameSchema.parse(req.body);
+      const savedName = await storage.addSavedName(nameData);
+      res.json(savedName);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid name data", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Remove a saved name (soft delete)
+  app.delete("/api/names/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      await storage.removeSavedName(id);
+      res.json({ message: "Name removed successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error removing name", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 

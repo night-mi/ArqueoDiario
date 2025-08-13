@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CashBreakdownForm from "@/components/cash-breakdown-form";
+import { NameManager } from "@/components/name-manager";
 import { ArrowLeft, ArrowRight, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { type CashBoxFormData } from "@shared/schema";
@@ -25,21 +26,12 @@ const cashBoxSchema = z.object({
 
 type CashBoxSchemaType = z.infer<typeof cashBoxSchema>;
 
-const PREDEFINED_WORKERS = [
-  "María González",
-  "Juan Pérez", 
-  "Ana Martín",
-  "Carlos López",
-  "Luis Rodríguez",
-  "Carmen Silva",
-  "Pedro Morales",
-  "Elena Vázquez"
-];
+// Removed predefined workers - now using NameManager
 
 export default function StepCashBoxEntry() {
   const { state, dispatch } = useReconciliation();
   const { toast } = useToast();
-  const [showCustomWorker, setShowCustomWorker] = useState(false);
+  const [workerName, setWorkerName] = useState("");
 
   const getCurrentDate = () => {
     const today = new Date();
@@ -64,6 +56,11 @@ export default function StepCashBoxEntry() {
     mode: "onChange"
   });
 
+  // Update worker name state when cash box changes
+  useEffect(() => {
+    setWorkerName(currentCashBox.workerName);
+  }, [state.currentCashBoxIndex, currentCashBox.workerName]);
+
   // Reset form when cash box index changes
   useEffect(() => {
     const resetValues = state.cashBoxes[state.currentCashBoxIndex] || {
@@ -79,7 +76,6 @@ export default function StepCashBoxEntry() {
     };
     
     form.reset(resetValues);
-    setShowCustomWorker(false); // Reset custom worker state too
   }, [state.currentCashBoxIndex, form]);
 
   const handlePrevious = () => {
@@ -116,6 +112,16 @@ export default function StepCashBoxEntry() {
   };
 
   const handleNextCashBox = (data: CashBoxSchemaType) => {
+    // Validate worker name
+    if (!workerName.trim()) {
+      toast({
+        title: "Error",
+        description: "Por favor, selecciona o escribe el nombre del trabajador.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // First save the current cash box data
     const cleanBreakdown = Object.fromEntries(
       Object.entries(data.breakdown || {}).map(([key, value]) => [key, Number(value) || 0])
@@ -123,6 +129,7 @@ export default function StepCashBoxEntry() {
 
     const formattedData: CashBoxFormData = {
       ...data,
+      workerName: workerName.trim(),
       breakdown: cleanBreakdown as any,
     };
 
@@ -192,60 +199,14 @@ export default function StepCashBoxEntry() {
                   </div>
 
                   <div>
-                    <Label htmlFor="worker">Trabajador</Label>
-                    <div className="space-y-2">
-                      {!showCustomWorker ? (
-                        <>
-                          <Select 
-                            onValueChange={(value) => {
-                              if (value === "custom") {
-                                setShowCustomWorker(true);
-                                form.setValue("workerName", "");
-                              } else {
-                                form.setValue("workerName", value);
-                              }
-                            }}
-                            value={form.watch("workerName")}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar trabajador" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PREDEFINED_WORKERS.map((worker, index) => (
-                                <SelectItem key={index} value={worker}>
-                                  {worker}
-                                </SelectItem>
-                              ))}
-                              <SelectItem value="custom">
-                                + Agregar trabajador personalizado
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </>
+                    <Label>Trabajador Seleccionado</Label>
+                    <div className="p-3 bg-gray-50 rounded border">
+                      {workerName ? (
+                        <p className="font-medium">{workerName}</p>
                       ) : (
-                        <>
-                          <Input
-                            placeholder="Ingresa el nombre del trabajador"
-                            value={form.watch("workerName")}
-                            onChange={(e) => form.setValue("workerName", e.target.value)}
-                          />
-                          <Button 
-                            type="button"
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              setShowCustomWorker(false);
-                              form.setValue("workerName", "");
-                            }}
-                          >
-                            Volver a la lista
-                          </Button>
-                        </>
+                        <p className="text-gray-500 italic">Selecciona un trabajador en la barra lateral</p>
                       )}
                     </div>
-                    {form.formState.errors.workerName && (
-                      <p className="text-sm text-red-600 mt-1">{form.formState.errors.workerName.message}</p>
-                    )}
                   </div>
 
                   <div>
@@ -332,34 +293,73 @@ export default function StepCashBoxEntry() {
 
       {/* Sidebar */}
       <div className="lg:col-span-1">
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <h4 className="font-semibold text-gray-900 mb-4">Estado Actual</h4>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Botes Configurados:</span>
-                <span className="font-medium">{state.totalCashBoxes}</span>
+        <div className="space-y-6">
+          {/* Worker Name Manager */}
+          <NameManager
+            type="worker"
+            title="Trabajadores"
+            onNameSelect={setWorkerName}
+            selectedName={workerName}
+          />
+
+          {/* Progress */}
+          <Card className="shadow-sm">
+            <CardContent className="p-4">
+              <h4 className="font-semibold text-gray-900 mb-4">Progreso</h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Bote Actual:</span>
+                  <span className="font-medium">{state.currentCashBoxIndex + 1} de {state.totalCashBoxes}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Completados:</span>
+                  <span className="font-medium">{processedCount}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Progreso Total:</span>
+                  <span className="font-medium text-primary">{progressPercentage}%</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Botes Procesados:</span>
-                <span className="font-medium">{processedCount}</span>
+              
+              <div className="mt-4">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${progressPercentage}%` }}
+                  ></div>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Progreso:</span>
-                <span className="font-medium text-primary">{progressPercentage}%</span>
+            </CardContent>
+          </Card>
+
+          {/* Navigation */}
+          <Card className="shadow-sm">
+            <CardContent className="p-4">
+              <h4 className="font-semibold text-gray-900 mb-4">Navegación</h4>
+              <div className="flex flex-col space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrevious}
+                  className="justify-start"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  {state.currentCashBoxIndex > 0 ? `Bote ${state.currentCashBoxIndex}` : 'Configuración'}
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={form.handleSubmit(handleSaveAndContinue)}
+                  className="justify-start"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Guardar Progreso
+                </Button>
               </div>
-            </div>
-            
-            <div className="mt-4">
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-primary h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${progressPercentage}%` }}
-                ></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

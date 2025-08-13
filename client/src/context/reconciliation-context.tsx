@@ -15,7 +15,7 @@ const initialState: ReconciliationData = {
   cashBoxes: [],
   currentStep: 1,
   currentCashBoxIndex: 0,
-  auditorName: "María González",
+  auditorName: "",
 };
 
 function reconciliationReducer(state: ReconciliationData, action: ReconciliationAction): ReconciliationData {
