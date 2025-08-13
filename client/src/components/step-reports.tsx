@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowLeft, Download, FileText, Calendar, Calculator } from "lucide-react";
 import { DENOMINATIONS, calculateBreakdownTotal } from "@/lib/denominations";
 import { useToast } from "@/hooks/use-toast";
+import { generateByBoxesPDF, generateByDatePDF, type PDFReportData } from "@/lib/pdf-generator";
 
 export default function StepReports() {
   const { state, dispatch } = useReconciliation();
@@ -54,11 +55,37 @@ export default function StepReports() {
     return totalBreakdown;
   };
 
-  const handleExportPDF = (reportType: string) => {
-    toast({
-      title: "Función no disponible",
-      description: `La exportación del ${reportType} será implementada próximamente.`,
-    });
+  const handleExportPDF = (reportType: 'boxes' | 'date') => {
+    const reportData: PDFReportData = {
+      date: validCashBoxes[0]?.date || new Date().toISOString().split('T')[0],
+      auditorName: state.auditorName,
+      cashBoxes: validCashBoxes,
+      totalVales,
+      totalBreakdown,
+      difference
+    };
+
+    try {
+      if (reportType === 'boxes') {
+        generateByBoxesPDF(reportData);
+        toast({
+          title: "PDF generado",
+          description: "El informe por botes se ha descargado correctamente.",
+        });
+      } else {
+        generateByDatePDF(reportData);
+        toast({
+          title: "PDF generado", 
+          description: "El informe por fecha se ha descargado correctamente.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error al generar PDF",
+        description: "Hubo un problema al generar el informe. Inténtalo de nuevo.",
+        variant: "destructive"
+      });
+    }
   };
 
   const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
@@ -316,7 +343,7 @@ export default function StepReports() {
         <TabsContent value="by-boxes" className="space-y-4">
           <div className="flex justify-between items-center">
             <h4 className="text-md font-medium text-gray-800">Resumen por Botes Individuales</h4>
-            <Button onClick={() => handleExportPDF("informe por botes")} size="sm">
+            <Button onClick={() => handleExportPDF("boxes")} size="sm">
               <Download className="mr-2 h-4 w-4" />
               Exportar PDF
             </Button>
@@ -327,7 +354,7 @@ export default function StepReports() {
         <TabsContent value="by-date" className="space-y-4">
           <div className="flex justify-between items-center">
             <h4 className="text-md font-medium text-gray-800">Informe Consolidado por Fecha</h4>
-            <Button onClick={() => handleExportPDF("informe por fecha")} size="sm">
+            <Button onClick={() => handleExportPDF("date")} size="sm">
               <Download className="mr-2 h-4 w-4" />
               Exportar PDF
             </Button>
