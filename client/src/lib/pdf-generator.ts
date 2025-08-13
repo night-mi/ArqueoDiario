@@ -79,23 +79,97 @@ export function generateByBoxesPDF(data: PDFReportData): void {
 export function generateByDatePDF(data: PDFReportData): void {
   const doc = new jsPDF();
   
-  // Group cash boxes by date and worker
-  const groupedData: Record<string, Record<string, CashBoxFormData[]>> = {};
+  // Group cash boxes by date, then by shift
+  const groupedData: Record<string, Record<number, CashBoxFormData[]>> = {};
   
   data.cashBoxes.forEach(box => {
     const date = box.date;
-    const worker = box.workerName;
+    const shift = box.shift;
     
     if (!groupedData[date]) {
       groupedData[date] = {};
     }
-    if (!groupedData[date][worker]) {
-      groupedData[date][worker] = [];
+    if (!groupedData[date][shift]) {
+      groupedData[date][shift] = [];
     }
-    groupedData[date][worker].push(box);
+    groupedData[date][shift].push(box);
   });
   
-  // Calculate total breakdown by denomination for all boxes
+  // Header
+  doc.setFontSize(18);
+  doc.text('INFORME DE ARQUEO POR FECHA', 20, 20);
+  
+  doc.setFontSize(12);
+  doc.text(`Responsable: ${data.auditorName}`, 20, 35);
+  doc.text(`Botes Procesados: ${data.cashBoxes.length}`, 20, 45);
+  
+  let currentY = 65;
+  
+  // Section 1: Grouping by dates and shifts
+  doc.setFontSize(14);
+  doc.text('DESGLOSE POR FECHAS Y TURNOS', 20, currentY);
+  currentY += 20;
+  
+  Object.entries(groupedData).forEach(([date, shifts]) => {
+    // Date header
+    doc.setFontSize(13);
+    doc.text(`FECHA: ${date}`, 25, currentY);
+    currentY += 15;
+    
+    let dateTotalVales = 0;
+    let dateTotalArqueo = 0;
+    
+    // Process shifts 1 and 2
+    [1, 2].forEach(shiftNumber => {
+      if (shifts[shiftNumber]) {
+        const shiftName = shiftNumber === 1 ? 'TURNO 1 (Mañana)' : 'TURNO 2 (Tarde)';
+        doc.setFontSize(11);
+        doc.text(`${shiftName}:`, 35, currentY);
+        currentY += 10;
+        
+        let shiftTotalVales = 0;
+        let shiftTotalArqueo = 0;
+        
+        shifts[shiftNumber].forEach((box, index) => {
+          const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+          const valeAmount = Number(box.valeAmount) || 0;
+          
+          shiftTotalVales += valeAmount;
+          shiftTotalArqueo += boxTotal;
+          
+          doc.setFontSize(9);
+          doc.text(`  ${box.workerName} - Bote ${index + 1}: Vale €${valeAmount.toFixed(2)} - Arqueo €${boxTotal.toFixed(2)}`, 45, currentY);
+          currentY += 8;
+        });
+        
+        // Shift subtotal
+        doc.setFontSize(10);
+        doc.text(`  TOTAL ${shiftName}: Vales €${shiftTotalVales.toFixed(2)} - Arqueo €${shiftTotalArqueo.toFixed(2)}`, 40, currentY);
+        currentY += 12;
+        
+        dateTotalVales += shiftTotalVales;
+        dateTotalArqueo += shiftTotalArqueo;
+      }
+    });
+    
+    // Date total
+    doc.setFontSize(12);
+    doc.text(`TOTAL ${date}: Vales €${dateTotalVales.toFixed(2)} - Arqueo €${dateTotalArqueo.toFixed(2)} - Diferencia €${(dateTotalArqueo - dateTotalVales).toFixed(2)}`, 25, currentY);
+    currentY += 25;
+  });
+  
+  // Add page break if needed
+  if (currentY > 250) {
+    doc.addPage();
+    currentY = 20;
+  }
+  
+  // Section 2: Complete denomination breakdown for processed boxes
+  doc.setFontSize(14);
+  doc.text('ARQUEO TOTAL DE BOTES PROCESADOS', 20, currentY);
+  currentY += 20;
+  
+  // Calculate total breakdown by denomination only for processed boxes
   const totalBreakdown: Record<string, number> = {};
   DENOMINATIONS.forEach(denom => {
     totalBreakdown[denom.value] = 0;
@@ -108,84 +182,6 @@ export function generateByDatePDF(data: PDFReportData): void {
       });
     }
   });
-  
-  // Header
-  doc.setFontSize(18);
-  doc.text('INFORME DE ARQUEO POR FECHA', 20, 20);
-  
-  doc.setFontSize(12);
-  doc.text(`Fecha: ${data.date}`, 20, 35);
-  doc.text(`Responsable: ${data.auditorName}`, 20, 45);
-  doc.text(`Botes Procesados: ${data.cashBoxes.length}`, 20, 55);
-  
-  let currentY = 75;
-  
-  // Section 1: Grouping by dates and workers
-  doc.setFontSize(14);
-  doc.text('DESGLOSE POR TRABAJADORES', 20, currentY);
-  currentY += 20;
-  
-  let grandTotalVales = 0;
-  let grandTotalArqueo = 0;
-  
-  Object.entries(groupedData).forEach(([date, workers]) => {
-    // Date header
-    doc.setFontSize(13);
-    doc.text(`Fecha: ${date}`, 25, currentY);
-    currentY += 15;
-    
-    let dateTotalVales = 0;
-    let dateTotalArqueo = 0;
-    
-    Object.entries(workers).forEach(([workerName, boxes]) => {
-      // Worker header
-      doc.setFontSize(11);
-      doc.text(`Trabajador: ${workerName}`, 35, currentY);
-      currentY += 10;
-      
-      // Worker's boxes details
-      let workerTotalVales = 0;
-      let workerTotalArqueo = 0;
-      
-      boxes.forEach((box, index) => {
-        const boxTotal = calculateBreakdownTotal(box.breakdown || {});
-        const valeAmount = Number(box.valeAmount) || 0;
-        
-        workerTotalVales += valeAmount;
-        workerTotalArqueo += boxTotal;
-        
-        doc.setFontSize(9);
-        doc.text(`  Bote ${index + 1}: Vale €${valeAmount.toFixed(2)} - Arqueo €${boxTotal.toFixed(2)} - Turno ${box.shift === 1 ? 'Mañana' : 'Tarde'}`, 45, currentY);
-        currentY += 8;
-      });
-      
-      // Worker subtotal
-      doc.setFontSize(10);
-      doc.text(`  TOTAL ${workerName}: Vales €${workerTotalVales.toFixed(2)} - Arqueo €${workerTotalArqueo.toFixed(2)}`, 40, currentY);
-      currentY += 15;
-      
-      dateTotalVales += workerTotalVales;
-      dateTotalArqueo += workerTotalArqueo;
-    });
-    
-    // Date total
-    doc.setFontSize(12);
-    doc.text(`GRAN TOTAL ${date}: Vales €${dateTotalVales.toFixed(2)} - Arqueo €${dateTotalArqueo.toFixed(2)}`, 25, currentY);
-    currentY += 20;
-    
-    grandTotalVales += dateTotalVales;
-    grandTotalArqueo += dateTotalArqueo;
-  });
-  
-  // Overall totals
-  doc.setFontSize(13);
-  doc.text(`TOTAL GENERAL: Vales €${grandTotalVales.toFixed(2)} - Arqueo €${grandTotalArqueo.toFixed(2)} - Diferencia €${(grandTotalArqueo - grandTotalVales).toFixed(2)}`, 20, currentY);
-  currentY += 30;
-  
-  // Section 2: Complete denomination breakdown
-  doc.setFontSize(14);
-  doc.text('ARQUEO TOTAL POR DENOMINACIONES', 20, currentY);
-  currentY += 20;
   
   // Bills breakdown
   doc.setFontSize(13);
