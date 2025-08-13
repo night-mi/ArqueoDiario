@@ -5,15 +5,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, ExternalLink, FileText, Calendar, Calculator, Printer } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileText, Calendar, Calculator, Printer, Save, History } from "lucide-react";
 import { DENOMINATIONS, calculateBreakdownTotal } from "@/lib/denominations";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 // PDF functionality removed - using window reports instead
 
 export default function StepReports() {
   const { state, dispatch } = useReconciliation();
   const { toast } = useToast();
   const [activeReport, setActiveReport] = useState("by-boxes");
+  const queryClient = useQueryClient();
 
   const handlePrevious = () => {
     dispatch({ type: "SET_CURRENT_STEP", payload: 4 });
@@ -22,6 +25,102 @@ export default function StepReports() {
   const handleReset = () => {
     if (confirm("¿Deseas iniciar un nuevo arqueo? Se perderán todos los datos actuales.")) {
       dispatch({ type: "RESET" });
+    }
+  };
+
+  // Save reconciliation mutation
+  const saveReconciliationMutation = useMutation({
+    mutationFn: async () => {
+      const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
+      
+      if (validCashBoxes.length === 0) {
+        throw new Error("No hay botes válidos para guardar");
+      }
+
+      if (!state.auditorName.trim()) {
+        throw new Error("Debe seleccionar un auditor antes de guardar");
+      }
+
+      // Create session data
+      const sessionData = {
+        sessionDate: new Date().toISOString().split('T')[0], // Today's date
+        auditorName: state.auditorName,
+        totalCashBoxes: validCashBoxes.length,
+        totalVales: totalVales.toString(),
+        totalBreakdown: totalBreakdown.toString(),
+        difference: difference.toString(),
+        status: "completed" as const,
+        notes: `Arqueo completado con ${validCashBoxes.length} botes`
+      };
+
+      // Create cash boxes data
+      const cashBoxesData = validCashBoxes.map(box => ({
+        date: box.date,
+        workerName: box.workerName,
+        shift: box.shift,
+        valeAmount: box.valeAmount.toString(),
+        breakdown: JSON.stringify(box.breakdown || {}),
+        totalBreakdown: calculateBreakdownTotal(box.breakdown || {}).toString()
+      }));
+
+      const response = await fetch('/api/history/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session: sessionData,
+          cashBoxes: cashBoxesData
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al guardar el arqueo');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Arqueo guardado",
+        description: "El arqueo se ha guardado correctamente en el historial.",
+      });
+      // Invalidate history queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/history'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error al guardar",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleSaveReconciliation = () => {
+    const { validCashBoxes } = calculateTotals();
+    
+    if (validCashBoxes.length === 0) {
+      toast({
+        title: "No hay datos para guardar",
+        description: "Completa al menos un bote antes de guardar el arqueo.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!state.auditorName.trim()) {
+      toast({
+        title: "Falta auditor",
+        description: "Debe seleccionar un auditor antes de guardar el arqueo.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (confirm("¿Deseas guardar este arqueo en el historial?")) {
+      saveReconciliationMutation.mutate();
     }
   };
 
@@ -746,7 +845,24 @@ export default function StepReports() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
           </Button>
-          <Button onClick={handleReset}>
+          
+          <Button 
+            onClick={handleSaveReconciliation} 
+            disabled={saveReconciliationMutation.isPending}
+            variant="default"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {saveReconciliationMutation.isPending ? "Guardando..." : "Guardar Arqueo"}
+          </Button>
+
+          <Link href="/history">
+            <Button variant="outline">
+              <History className="mr-2 h-4 w-4" />
+              Ver Historial
+            </Button>
+          </Link>
+          
+          <Button onClick={handleReset} variant="outline">
             Nuevo Arqueo
           </Button>
         </div>

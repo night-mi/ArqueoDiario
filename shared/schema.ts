@@ -5,26 +5,32 @@ import { z } from "zod";
 
 export const cashBoxes = pgTable("cash_boxes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").references(() => reconciliationSessions.id),
   date: date("date").notNull(),
   workerName: text("worker_name").notNull(),
   shift: integer("shift").notNull(), // 1 or 2
   valeAmount: decimal("vale_amount", { precision: 10, scale: 2 }).notNull(),
   breakdown: text("breakdown").notNull(), // JSON string of denomination breakdown
   totalBreakdown: decimal("total_breakdown", { precision: 10, scale: 2 }).notNull(),
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const reconciliationSessions = pgTable("reconciliation_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  date: date("date").notNull(),
+  sessionDate: date("session_date").notNull(), // Date when the reconciliation was performed
   auditorName: text("auditor_name").notNull(),
   totalCashBoxes: integer("total_cash_boxes").notNull(),
   totalVales: decimal("total_vales", { precision: 10, scale: 2 }).notNull(),
   totalBreakdown: decimal("total_breakdown", { precision: 10, scale: 2 }).notNull(),
   difference: decimal("difference", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("completed"), // completed, in_progress
+  notes: text("notes"), // Optional notes about the reconciliation
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const insertCashBoxSchema = createInsertSchema(cashBoxes).pick({
+  sessionId: true,
   date: true,
   workerName: true,
   shift: true,
@@ -34,12 +40,14 @@ export const insertCashBoxSchema = createInsertSchema(cashBoxes).pick({
 });
 
 export const insertReconciliationSessionSchema = createInsertSchema(reconciliationSessions).pick({
-  date: true,
+  sessionDate: true,
   auditorName: true,
   totalCashBoxes: true,
   totalVales: true,
   totalBreakdown: true,
   difference: true,
+  status: true,
+  notes: true,
 });
 
 export type InsertCashBox = z.infer<typeof insertCashBoxSchema>;

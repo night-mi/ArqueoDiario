@@ -134,6 +134,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // History routes
+  // Get all reconciliation sessions for history
+  app.get("/api/history", async (req, res) => {
+    try {
+      const sessions = await storage.getAllReconciliationSessions();
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching history", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Get specific reconciliation session with cash boxes
+  app.get("/api/history/:sessionId", async (req, res) => {
+    try {
+      const sessionId = req.params.sessionId;
+      const session = await storage.getReconciliationSessionById(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ message: "Reconciliation session not found" });
+      }
+
+      const cashBoxes = await storage.getCashBoxesBySessionId(sessionId);
+      
+      res.json({
+        session,
+        cashBoxes
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching session details", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Create complete reconciliation (session + cash boxes)
+  app.post("/api/history/complete", async (req, res) => {
+    try {
+      const { session, cashBoxes } = req.body;
+      
+      const result = await storage.createCompleteReconciliation(session, cashBoxes);
+      
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ message: "Error creating complete reconciliation", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

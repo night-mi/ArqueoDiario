@@ -1,7 +1,7 @@
 import { type CashBox, type InsertCashBox, type ReconciliationSession, type InsertReconciliationSession, type SavedName, type InsertSavedName } from "@shared/schema";
 import { db } from "./db";
 import { savedNames, cashBoxes, reconciliationSessions } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -9,11 +9,19 @@ export interface IStorage {
   createCashBox(cashBox: InsertCashBox): Promise<CashBox>;
   getCashBoxesByDate(date: string): Promise<CashBox[]>;
   getAllCashBoxes(): Promise<CashBox[]>;
+  getCashBoxesBySessionId(sessionId: string): Promise<CashBox[]>;
   
   // Reconciliation Session operations
   createReconciliationSession(session: InsertReconciliationSession): Promise<ReconciliationSession>;
   getReconciliationSessionsByDate(date: string): Promise<ReconciliationSession[]>;
   getAllReconciliationSessions(): Promise<ReconciliationSession[]>;
+  getReconciliationSessionById(id: string): Promise<ReconciliationSession | undefined>;
+  
+  // Complete reconciliation (session + cash boxes)
+  createCompleteReconciliation(session: InsertReconciliationSession, cashBoxes: InsertCashBox[]): Promise<{
+    session: ReconciliationSession;
+    cashBoxes: CashBox[];
+  }>;
   
   // Names management
   getSavedNames(type: 'worker' | 'auditor'): Promise<SavedName[]>;
@@ -73,11 +81,51 @@ export class DatabaseStorage implements IStorage {
   async getReconciliationSessionsByDate(date: string): Promise<ReconciliationSession[]> {
     return await db.select()
       .from(reconciliationSessions)
-      .where(eq(reconciliationSessions.date, date));
+      .where(eq(reconciliationSessions.sessionDate, date));
   }
 
   async getAllReconciliationSessions(): Promise<ReconciliationSession[]> {
-    return await db.select().from(reconciliationSessions);
+    return await db.select().from(reconciliationSessions).orderBy(desc(reconciliationSessions.createdAt));
+  }
+
+  async getReconciliationSessionById(id: string): Promise<ReconciliationSession | undefined> {
+    const [session] = await db.select()
+      .from(reconciliationSessions)
+      .where(eq(reconciliationSessions.id, id));
+    return session || undefined;
+  }
+
+  async getCashBoxesBySessionId(sessionId: string): Promise<CashBox[]> {
+    return await db.select()
+      .from(cashBoxes)
+      .where(eq(cashBoxes.sessionId, sessionId))
+      .orderBy(cashBoxes.createdAt);
+  }
+
+  async createCompleteReconciliation(session: InsertReconciliationSession, cashBoxesData: InsertCashBox[]): Promise<{
+    session: ReconciliationSession;
+    cashBoxes: CashBox[];
+  }> {
+    // Create the reconciliation session first
+    const [createdSession] = await db
+      .insert(reconciliationSessions)
+      .values(session)
+      .returning();
+
+    // Create all cash boxes linked to this session
+    const createdCashBoxes = [];
+    for (const cashBoxData of cashBoxesData) {
+      const [cashBox] = await db
+        .insert(cashBoxes)
+        .values({ ...cashBoxData, sessionId: createdSession.id })
+        .returning();
+      createdCashBoxes.push(cashBox);
+    }
+
+    return {
+      session: createdSession,
+      cashBoxes: createdCashBoxes
+    };
   }
 }
 
