@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Download, FileText, Calendar, Calculator } from "lucide-react";
+import { ArrowLeft, Download, FileText, Calendar, Calculator, Printer } from "lucide-react";
 import { DENOMINATIONS, calculateBreakdownTotal } from "@/lib/denominations";
 import { useToast } from "@/hooks/use-toast";
 import { generateByBoxesPDF, generateByDatePDF, type PDFReportData } from "@/lib/pdf-generator";
@@ -112,6 +112,219 @@ export default function StepReports() {
         variant: "destructive"
       });
     }
+  };
+
+  const handlePrint = (reportType: 'boxes' | 'date') => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: "Error",
+        description: "No se pudo abrir la ventana de impresión. Verifica que no esté bloqueada por el navegador.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
+    
+    if (validCashBoxes.length === 0) {
+      toast({
+        title: "No hay datos",
+        description: "No hay botes válidos para imprimir el informe.",
+        variant: "destructive"
+      });
+      printWindow.close();
+      return;
+    }
+
+    let htmlContent = '';
+    
+    if (reportType === 'boxes') {
+      htmlContent = generatePrintableByBoxes(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
+    } else {
+      htmlContent = generatePrintableByDate(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
+    }
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
+  const generatePrintableByBoxes = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number, auditorName: string) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Informe de Arqueo por Botes</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          h1 { text-align: center; margin-bottom: 30px; }
+          h2 { border-bottom: 2px solid #333; padding-bottom: 5px; }
+          .header-info { margin-bottom: 20px; }
+          .summary { background-color: #f5f5f5; padding: 15px; margin: 20px 0; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; font-weight: bold; }
+          .total-row { background-color: #e8f4f8; font-weight: bold; }
+          .footer { margin-top: 30px; font-size: 12px; text-align: center; }
+          @media print { body { margin: 0; } }
+        </style>
+      </head>
+      <body>
+        <h1>INFORME DE ARQUEO POR BOTES</h1>
+        
+        <div class="header-info">
+          <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-ES')}</p>
+          <p><strong>Responsable:</strong> ${auditorName}</p>
+          <p><strong>Total de Botes:</strong> ${cashBoxes.length}</p>
+        </div>
+
+        <div class="summary">
+          <h2>RESUMEN GENERAL</h2>
+          <p><strong>Total Vales:</strong> €${totalVales.toFixed(2)}</p>
+          <p><strong>Total Arqueo:</strong> €${totalBreakdown.toFixed(2)}</p>
+          <p><strong>Diferencia:</strong> €${difference.toFixed(2)}</p>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Bote</th>
+              <th>Fecha</th>
+              <th>Trabajador</th>
+              <th>Turno</th>
+              <th>Vale</th>
+              <th>Arqueo</th>
+              <th>Diferencia</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${cashBoxes.map((box, index) => {
+              const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+              const boxDifference = boxTotal - (Number(box.valeAmount) || 0);
+              return `
+                <tr>
+                  <td>Bote ${index + 1}</td>
+                  <td>${box.date}</td>
+                  <td>${box.workerName}</td>
+                  <td>${box.shift === 1 ? 'Mañana' : 'Tarde'}</td>
+                  <td>€${(Number(box.valeAmount) || 0).toFixed(2)}</td>
+                  <td>€${boxTotal.toFixed(2)}</td>
+                  <td>€${boxDifference.toFixed(2)}</td>
+                  <td>${Math.abs(boxDifference) > 0.01 ? 'Con diferencias' : 'Correcto'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p>Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}</p>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  const generatePrintableByDate = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number, auditorName: string) => {
+    // Group cash boxes by date, then by shift
+    const groupedData: Record<string, Record<number, any[]>> = {};
+    
+    cashBoxes.forEach(box => {
+      const date = box.date;
+      const shift = box.shift;
+      
+      if (!groupedData[date]) {
+        groupedData[date] = {};
+      }
+      if (!groupedData[date][shift]) {
+        groupedData[date][shift] = [];
+      }
+      groupedData[date][shift].push(box);
+    });
+
+    const sortedDates = Object.keys(groupedData).sort();
+    const uniqueDates = Array.from(new Set(cashBoxes.map(box => box.date))).sort();
+
+    let dateContent = '';
+    
+    sortedDates.forEach(date => {
+      const shifts = groupedData[date];
+      dateContent += `
+        <div class="date-section">
+          <h3>FECHA: ${date}</h3>
+      `;
+      
+      let dateTotalVales = 0;
+      let dateTotalArqueo = 0;
+      
+      [1, 2].forEach(shiftNumber => {
+        if (shifts[shiftNumber]) {
+          const shiftName = shiftNumber === 1 ? 'TURNO 1 (Mañana)' : 'TURNO 2 (Tarde)';
+          dateContent += `<h4>${shiftName}:</h4><ul>`;
+          
+          let shiftTotalVales = 0;
+          let shiftTotalArqueo = 0;
+          
+          shifts[shiftNumber].forEach((box, index) => {
+            const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+            const valeAmount = Number(box.valeAmount) || 0;
+            
+            shiftTotalVales += valeAmount;
+            shiftTotalArqueo += boxTotal;
+            
+            dateContent += `<li>${box.workerName} - Bote ${index + 1}: Vale €${valeAmount.toFixed(2)} - Arqueo €${boxTotal.toFixed(2)}</li>`;
+          });
+          
+          dateContent += `</ul><p><strong>TOTAL ${shiftName}: Vales €${shiftTotalVales.toFixed(2)} - Arqueo €${shiftTotalArqueo.toFixed(2)}</strong></p>`;
+          
+          dateTotalVales += shiftTotalVales;
+          dateTotalArqueo += shiftTotalArqueo;
+        }
+      });
+      
+      dateContent += `<p class="date-total"><strong>TOTAL ${date}: Vales €${dateTotalVales.toFixed(2)} - Arqueo €${dateTotalArqueo.toFixed(2)} - Diferencia €${(dateTotalArqueo - dateTotalVales).toFixed(2)}</strong></p></div>`;
+    });
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Informe de Arqueo por Fecha</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          h1 { text-align: center; margin-bottom: 30px; }
+          h2, h3 { border-bottom: 2px solid #333; padding-bottom: 5px; }
+          h4 { color: #555; margin: 15px 0 5px 20px; }
+          .header-info { margin-bottom: 20px; }
+          .date-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+          .date-total { background-color: #e8f4f8; padding: 10px; font-weight: bold; }
+          ul { margin: 5px 0 10px 40px; }
+          li { margin: 5px 0; }
+          .footer { margin-top: 30px; font-size: 12px; text-align: center; }
+          @media print { body { margin: 0; } }
+        </style>
+      </head>
+      <body>
+        <h1>INFORME DE ARQUEO POR FECHA</h1>
+        
+        <div class="header-info">
+          <p><strong>Responsable:</strong> ${auditorName}</p>
+          <p><strong>Botes Procesados:</strong> ${cashBoxes.length}</p>
+          <p><strong>Fechas incluidas:</strong> ${uniqueDates.join(', ')}</p>
+        </div>
+
+        <h2>DESGLOSE POR FECHAS Y TURNOS</h2>
+        ${dateContent}
+
+        <div class="footer">
+          <p>Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}</p>
+        </div>
+      </body>
+      </html>
+    `;
   };
 
   const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
@@ -369,10 +582,16 @@ export default function StepReports() {
         <TabsContent value="by-boxes" className="space-y-4">
           <div className="flex justify-between items-center">
             <h4 className="text-md font-medium text-gray-800">Resumen por Botes Individuales</h4>
-            <Button onClick={() => handleExportPDF("boxes")} size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Exportar PDF
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => handlePrint("boxes")} size="sm" variant="outline">
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir
+              </Button>
+              <Button onClick={() => handleExportPDF("boxes")} size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                Exportar PDF
+              </Button>
+            </div>
           </div>
           {renderByBoxesReport()}
         </TabsContent>
@@ -380,10 +599,16 @@ export default function StepReports() {
         <TabsContent value="by-date" className="space-y-4">
           <div className="flex justify-between items-center">
             <h4 className="text-md font-medium text-gray-800">Informe Consolidado por Fecha</h4>
-            <Button onClick={() => handleExportPDF("date")} size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Exportar PDF
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => handlePrint("date")} size="sm" variant="outline">
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir
+              </Button>
+              <Button onClick={() => handleExportPDF("date")} size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                Exportar PDF
+              </Button>
+            </div>
           </div>
           {renderByDateReport()}
         </TabsContent>
