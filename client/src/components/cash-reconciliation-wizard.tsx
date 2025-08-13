@@ -6,12 +6,17 @@ import StepCashBoxEntry from "@/components/step-cash-box-entry";
 import StepValidation from "@/components/step-validation";
 import StepReport from "@/components/step-report";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { X, User, Edit3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CashReconciliationWizard() {
   const { state, dispatch } = useReconciliation();
   const { toast } = useToast();
+  const [currentUser, setCurrentUser] = useState("María González");
+  const [isEditingUser, setIsEditingUser] = useState(false);
 
   const handleReset = () => {
     if (confirm("¿Estás seguro de que quieres cancelar el arqueo? Se perderán todos los datos.")) {
@@ -23,12 +28,21 @@ export default function CashReconciliationWizard() {
     }
   };
 
-  const getCurrentUser = () => "María González";
   const getCurrentDate = () => new Date().toLocaleDateString("es-ES", {
     day: "numeric",
     month: "long",
     year: "numeric"
   });
+
+  const handleUserChange = (newUser: string) => {
+    setCurrentUser(newUser);
+    setIsEditingUser(false);
+    dispatch({ type: "SET_AUDITOR_NAME", payload: newUser });
+    toast({
+      title: "Usuario actualizado",
+      description: `Ahora trabajando como: ${newUser}`,
+    });
+  };
 
   const renderCurrentStep = () => {
     switch (state.currentStep) {
@@ -62,11 +76,47 @@ export default function CashReconciliationWizard() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{getCurrentUser()}</p>
-                <p className="text-xs text-gray-500">{getCurrentDate()}</p>
+                {!isEditingUser ? (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm font-medium text-gray-900">{currentUser}</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsEditingUser(true)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Edit3 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500">{getCurrentDate()}</p>
+                  </>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={currentUser}
+                      onChange={(e) => setCurrentUser(e.target.value)}
+                      className="h-8 text-sm"
+                      placeholder="Nombre del responsable"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleUserChange(currentUser);
+                        }
+                      }}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleUserChange(currentUser)}
+                      className="h-8 px-2"
+                    >
+                      ✓
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <i className="fas fa-user text-gray-600 text-sm"></i>
+                <User className="h-4 w-4 text-gray-600" />
               </div>
             </div>
           </div>

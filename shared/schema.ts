@@ -16,6 +16,7 @@ export const cashBoxes = pgTable("cash_boxes", {
 export const reconciliationSessions = pgTable("reconciliation_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   date: date("date").notNull(),
+  auditorName: text("auditor_name").notNull(),
   totalCashBoxes: integer("total_cash_boxes").notNull(),
   totalVales: decimal("total_vales", { precision: 10, scale: 2 }).notNull(),
   totalBreakdown: decimal("total_breakdown", { precision: 10, scale: 2 }).notNull(),
@@ -34,6 +35,7 @@ export const insertCashBoxSchema = createInsertSchema(cashBoxes).pick({
 
 export const insertReconciliationSessionSchema = createInsertSchema(reconciliationSessions).pick({
   date: true,
+  auditorName: true,
   totalCashBoxes: true,
   totalVales: true,
   totalBreakdown: true,
@@ -77,4 +79,5 @@ export type ReconciliationData = {
   cashBoxes: CashBoxFormData[];
   currentStep: number;
   currentCashBoxIndex: number;
+  auditorName: string;
 };

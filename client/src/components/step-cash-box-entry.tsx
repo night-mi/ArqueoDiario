@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,16 +25,21 @@ const cashBoxSchema = z.object({
 
 type CashBoxSchemaType = z.infer<typeof cashBoxSchema>;
 
-const WORKERS = [
-  { value: "maria", label: "María González" },
-  { value: "juan", label: "Juan Pérez" },
-  { value: "ana", label: "Ana Martín" },
-  { value: "carlos", label: "Carlos López" },
+const PREDEFINED_WORKERS = [
+  "María González",
+  "Juan Pérez", 
+  "Ana Martín",
+  "Carlos López",
+  "Luis Rodríguez",
+  "Carmen Silva",
+  "Pedro Morales",
+  "Elena Vázquez"
 ];
 
 export default function StepCashBoxEntry() {
   const { state, dispatch } = useReconciliation();
   const { toast } = useToast();
+  const [showCustomWorker, setShowCustomWorker] = useState(false);
 
   const getCurrentDate = () => {
     const today = new Date();
@@ -146,21 +152,56 @@ export default function StepCashBoxEntry() {
 
                   <div>
                     <Label htmlFor="worker">Trabajador</Label>
-                    <Select 
-                      onValueChange={(value) => form.setValue("workerName", value)}
-                      value={form.watch("workerName")}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar trabajador" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {WORKERS.map((worker) => (
-                          <SelectItem key={worker.value} value={worker.label}>
-                            {worker.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                      {!showCustomWorker ? (
+                        <>
+                          <Select 
+                            onValueChange={(value) => {
+                              if (value === "custom") {
+                                setShowCustomWorker(true);
+                                form.setValue("workerName", "");
+                              } else {
+                                form.setValue("workerName", value);
+                              }
+                            }}
+                            value={form.watch("workerName")}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar trabajador" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PREDEFINED_WORKERS.map((worker, index) => (
+                                <SelectItem key={index} value={worker}>
+                                  {worker}
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="custom">
+                                + Agregar trabajador personalizado
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </>
+                      ) : (
+                        <>
+                          <Input
+                            placeholder="Ingresa el nombre del trabajador"
+                            value={form.watch("workerName")}
+                            onChange={(e) => form.setValue("workerName", e.target.value)}
+                          />
+                          <Button 
+                            type="button"
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setShowCustomWorker(false);
+                              form.setValue("workerName", "");
+                            }}
+                          >
+                            Volver a la lista
+                          </Button>
+                        </>
+                      )}
+                    </div>
                     {form.formState.errors.workerName && (
                       <p className="text-sm text-red-600 mt-1">{form.formState.errors.workerName.message}</p>
                     )}

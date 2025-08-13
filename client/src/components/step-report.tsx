@@ -54,6 +54,7 @@ export default function StepReport() {
     
     const session: InsertReconciliationSession = {
       date: state.cashBoxes[0]?.date || new Date().toISOString().split('T')[0],
+      auditorName: state.auditorName || "Usuario no especificado",
       totalCashBoxes: state.totalCashBoxes,
       totalVales: totalVales.toString(),
       totalBreakdown: totalBreakdown.toString(),

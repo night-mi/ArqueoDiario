@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calculator, Info, Lightbulb, ArrowRight } from "lucide-react";
+import { Calculator, Info, Lightbulb, ArrowRight, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function StepConfiguration() {
@@ -77,7 +77,19 @@ export default function StepConfiguration() {
                   <div>
                     <h4 className="text-sm font-medium text-blue-900 mb-1">Recordatorio</h4>
                     <p className="text-sm text-blue-700">
-                      Cada bote requerirá: fecha, trabajador, turno (1 o 2), cantidad del vale y arqueo detallado.
+                      Cada bote requerirá: fecha, trabajador (puedes elegir de la lista o agregar uno nuevo), turno (1 o 2), cantidad del vale y arqueo detallado.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <User className="text-green-600 mt-0.5 h-5 w-5" />
+                  <div>
+                    <h4 className="text-sm font-medium text-green-900 mb-1">Personalización</h4>
+                    <p className="text-sm text-green-700">
+                      Puedes cambiar el nombre del responsable del arqueo en la esquina superior derecha y agregar trabajadores personalizados durante el registro.
                     </p>
                   </div>
                 </div>
