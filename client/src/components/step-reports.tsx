@@ -5,10 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Download, FileText, Calendar, Calculator, Printer } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileText, Calendar, Calculator, Printer } from "lucide-react";
 import { DENOMINATIONS, calculateBreakdownTotal } from "@/lib/denominations";
 import { useToast } from "@/hooks/use-toast";
-import { generateByBoxesPDF, generateByDatePDF, type PDFReportData } from "@/lib/pdf-generator";
+// PDF functionality removed - using window reports instead
 
 export default function StepReports() {
   const { state, dispatch } = useReconciliation();
@@ -55,18 +55,9 @@ export default function StepReports() {
     return totalBreakdown;
   };
 
-  const handleExportPDF = (reportType: 'boxes' | 'date') => {
-    console.log("Iniciando exportación PDF:", reportType);
-    
+  const handleOpenReport = (reportType: 'boxes' | 'date') => {
     const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
     
-    console.log("Datos para PDF:", {
-      validCashBoxes: validCashBoxes.length,
-      totalVales,
-      totalBreakdown,
-      difference
-    });
-
     if (validCashBoxes.length === 0) {
       toast({
         title: "No hay datos",
@@ -76,42 +67,27 @@ export default function StepReports() {
       return;
     }
 
-    // For date reports, use a generic date since we're grouping by individual box dates
-    const reportData: PDFReportData = {
-      date: new Date().toISOString().split('T')[0], // Current date for report generation
-      auditorName: state.auditorName,
-      cashBoxes: validCashBoxes,
-      totalVales,
-      totalBreakdown,
-      difference
-    };
-
-    try {
-      console.log("Generando PDF...", reportType);
-      
-      if (reportType === 'boxes') {
-        generateByBoxesPDF(reportData);
-        toast({
-          title: "PDF generado",
-          description: "El informe por botes se ha descargado correctamente.",
-        });
-      } else {
-        generateByDatePDF(reportData);
-        toast({
-          title: "PDF generado", 
-          description: "El informe por fecha se ha descargado correctamente.",
-        });
-      }
-      
-      console.log("PDF generado exitosamente");
-    } catch (error) {
-      console.error("Error al generar PDF:", error);
+    const reportWindow = window.open('', '_blank');
+    if (!reportWindow) {
       toast({
-        title: "Error al generar PDF",
-        description: `Hubo un problema al generar el informe: ${error}`,
+        title: "Error",
+        description: "No se pudo abrir la ventana del informe. Verifica que no esté bloqueada por el navegador.",
         variant: "destructive"
       });
+      return;
     }
+
+    let htmlContent = '';
+    
+    if (reportType === 'boxes') {
+      htmlContent = generateReportByBoxes(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
+    } else {
+      htmlContent = generateReportByDate(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
+    }
+
+    reportWindow.document.write(htmlContent);
+    reportWindow.document.close();
+    reportWindow.focus();
   };
 
   const handlePrint = (reportType: 'boxes' | 'date') => {
@@ -140,9 +116,9 @@ export default function StepReports() {
     let htmlContent = '';
     
     if (reportType === 'boxes') {
-      htmlContent = generatePrintableByBoxes(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
+      htmlContent = generateReportByBoxes(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
     } else {
-      htmlContent = generatePrintableByDate(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
+      htmlContent = generateReportByDate(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
     }
 
     printWindow.document.write(htmlContent);
@@ -151,7 +127,7 @@ export default function StepReports() {
     printWindow.print();
   };
 
-  const generatePrintableByBoxes = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number, auditorName: string) => {
+  const generateReportByBoxes = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number, auditorName: string) => {
     return `
       <!DOCTYPE html>
       <html>
@@ -168,10 +144,33 @@ export default function StepReports() {
           th { background-color: #f2f2f2; font-weight: bold; }
           .total-row { background-color: #e8f4f8; font-weight: bold; }
           .footer { margin-top: 30px; font-size: 12px; text-align: center; }
-          @media print { body { margin: 0; } }
+          .print-button { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            background-color: #2563eb; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          }
+          .print-button:hover { background-color: #1d4ed8; }
+          @media print { 
+            body { margin: 0; } 
+            .print-button { display: none; }
+          }
         </style>
+        <script>
+          function printReport() {
+            window.print();
+          }
+        </script>
       </head>
       <body>
+        <button class="print-button" onclick="printReport()">🖨️ Imprimir</button>
         <h1>INFORME DE ARQUEO POR BOTES</h1>
         
         <div class="header-info">
@@ -208,10 +207,10 @@ export default function StepReports() {
               
               // Get breakdown with only non-zero values for print
               const nonZeroBreakdown = Object.entries(box.breakdown || {})
-                .filter(([_, count]) => (count || 0) > 0)
+                .filter(([_, count]) => (Number(count) || 0) > 0)
                 .map(([denomination, count]) => {
                   const denom = DENOMINATIONS.find(d => d.value === denomination);
-                  const value = (count || 0) * parseFloat(denomination);
+                  const value = (Number(count) || 0) * parseFloat(denomination);
                   return `${denom?.label || denomination}: ${count} = €${value.toFixed(2)}`;
                 }).join('<br>');
               
@@ -240,7 +239,7 @@ export default function StepReports() {
     `;
   };
 
-  const generatePrintableByDate = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number, auditorName: string) => {
+  const generateReportByDate = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number, auditorName: string) => {
     // Group cash boxes by date
     const groupedByDate: Record<string, any[]> = {};
     cashBoxes.forEach(box => {
@@ -271,8 +270,9 @@ export default function StepReports() {
       dateCashBoxes.forEach(box => {
         if (box.breakdown) {
           Object.entries(box.breakdown).forEach(([denom, count]) => {
-            if ((count || 0) > 0) {
-              dateBreakdown[denom] = (dateBreakdown[denom] || 0) + (count || 0);
+            const numCount = Number(count) || 0;
+            if (numCount > 0) {
+              dateBreakdown[denom] = (dateBreakdown[denom] || 0) + numCount;
             }
           });
         }
@@ -355,10 +355,33 @@ export default function StepReports() {
           ul { margin: 5px 0 10px 40px; }
           li { margin: 5px 0; }
           .footer { margin-top: 30px; font-size: 12px; text-align: center; }
-          @media print { body { margin: 0; } }
+          .print-button { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            background-color: #2563eb; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          }
+          .print-button:hover { background-color: #1d4ed8; }
+          @media print { 
+            body { margin: 0; } 
+            .print-button { display: none; }
+          }
         </style>
+        <script>
+          function printReport() {
+            window.print();
+          }
+        </script>
       </head>
       <body>
+        <button class="print-button" onclick="printReport()">🖨️ Imprimir</button>
         <h1>INFORME DE ARQUEO POR FECHA</h1>
         
         <div class="header-info">
@@ -595,8 +618,9 @@ export default function StepReports() {
           dateCashBoxes.forEach(box => {
             if (box.breakdown) {
               Object.entries(box.breakdown).forEach(([denom, count]) => {
-                if ((count || 0) > 0) {
-                  dateBreakdown[denom] = (dateBreakdown[denom] || 0) + (count || 0);
+                const numCount = Number(count) || 0;
+                if (numCount > 0) {
+                  dateBreakdown[denom] = (dateBreakdown[denom] || 0) + numCount;
                 }
               });
             }
@@ -742,9 +766,9 @@ export default function StepReports() {
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimir
               </Button>
-              <Button onClick={() => handleExportPDF("boxes")} size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                Exportar PDF
+              <Button onClick={() => handleOpenReport("boxes")} size="sm">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Ver Informe
               </Button>
             </div>
           </div>
@@ -759,9 +783,9 @@ export default function StepReports() {
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimir
               </Button>
-              <Button onClick={() => handleExportPDF("date")} size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                Exportar PDF
+              <Button onClick={() => handleOpenReport("date")} size="sm">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Ver Informe
               </Button>
             </div>
           </div>
