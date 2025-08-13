@@ -64,18 +64,27 @@ The application uses several key design patterns:
 - **Real-time Calculations**: Dynamic breakdown totals and validation across all components
 - **Dual Reporting System**: Both individual cash box reports and consolidated date-based reports
 
-## Recent Changes (December 2024)
+## Recent Changes (August 2025)
 
-### Enhanced Workflow Structure
-- **Step 4 - Totals Summary**: New step showing comprehensive breakdown of all denominations across all cash boxes
-- **Step 5 - Dual Reports**: Two distinct report formats for different business needs
-- **Real-time Calculations**: Improved calculation engine with live updates during data entry
+### Complete System Overhaul
+- **Database Integration**: Full PostgreSQL integration with Drizzle ORM replacing in-memory storage
+- **Name Management System**: Dynamic worker and auditor management with add/remove functionality
+- **Historical Tracking**: Complete history system to save and retrieve past reconciliations
+- **Enhanced Workflow**: 5-step wizard with comprehensive reporting and data persistence
 
-### Reporting Capabilities
-- **By Cash Boxes**: Individual analysis of each cash box with discrepancy detection
-- **By Date**: Consolidated view with total denomination breakdown and summary statistics
-- **Manual Name Entry**: Full support for custom worker names and editable auditor identification
-- **Offline Functionality**: Complete operation without internet connectivity
+### New Features
+- **PostgreSQL Database**: All data now persists in database with proper schema and relationships
+- **Dynamic Name Management**: Workers and auditors managed through NameManager component with real-time updates
+- **History System**: Complete reconciliation sessions saved with detailed cash box breakdowns
+- **History Pages**: Dedicated pages for viewing historical reconciliations with search and filtering
+- **Data Persistence**: All reconciliation data, names, and history stored permanently
+- **Offline Functionality**: System works completely offline with local database storage
+
+### Technical Improvements
+- **Schema Design**: Proper database relationships between sessions, cash boxes, and names
+- **API Endpoints**: RESTful API for all CRUD operations including history management
+- **Error Handling**: Comprehensive error handling and validation throughout the system
+- **Real-time Updates**: Live data updates using TanStack Query for optimal user experience
 
 # External Dependencies
 

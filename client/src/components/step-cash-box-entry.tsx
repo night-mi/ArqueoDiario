@@ -61,6 +61,13 @@ export default function StepCashBoxEntry() {
     setWorkerName(currentCashBox.workerName);
   }, [state.currentCashBoxIndex, currentCashBox.workerName]);
 
+  // Update form worker name when worker is selected
+  useEffect(() => {
+    if (workerName) {
+      form.setValue('workerName', workerName);
+    }
+  }, [workerName, form]);
+
   // Reset form when cash box index changes
   useEffect(() => {
     const resetValues = state.cashBoxes[state.currentCashBoxIndex] || {
