@@ -79,7 +79,23 @@ export function generateByBoxesPDF(data: PDFReportData): void {
 export function generateByDatePDF(data: PDFReportData): void {
   const doc = new jsPDF();
   
-  // Calculate total breakdown by denomination
+  // Group cash boxes by date and worker
+  const groupedData: Record<string, Record<string, CashBoxFormData[]>> = {};
+  
+  data.cashBoxes.forEach(box => {
+    const date = box.date;
+    const worker = box.workerName;
+    
+    if (!groupedData[date]) {
+      groupedData[date] = {};
+    }
+    if (!groupedData[date][worker]) {
+      groupedData[date][worker] = [];
+    }
+    groupedData[date][worker].push(box);
+  });
+  
+  // Calculate total breakdown by denomination for all boxes
   const totalBreakdown: Record<string, number> = {};
   DENOMINATIONS.forEach(denom => {
     totalBreakdown[denom.value] = 0;
@@ -102,20 +118,80 @@ export function generateByDatePDF(data: PDFReportData): void {
   doc.text(`Responsable: ${data.auditorName}`, 20, 45);
   doc.text(`Botes Procesados: ${data.cashBoxes.length}`, 20, 55);
   
-  // Summary section
-  doc.setFontSize(14);
-  doc.text('RESUMEN CONSOLIDADO', 20, 75);
+  let currentY = 75;
   
-  doc.setFontSize(11);
-  doc.text(`Total Vales: €${data.totalVales.toFixed(2)}`, 20, 90);
-  doc.text(`Total Arqueo: €${data.totalBreakdown.toFixed(2)}`, 20, 100);
-  doc.text(`Diferencia: €${data.difference.toFixed(2)}`, 20, 110);
+  // Section 1: Grouping by dates and workers
+  doc.setFontSize(14);
+  doc.text('DESGLOSE POR TRABAJADORES', 20, currentY);
+  currentY += 20;
+  
+  let grandTotalVales = 0;
+  let grandTotalArqueo = 0;
+  
+  Object.entries(groupedData).forEach(([date, workers]) => {
+    // Date header
+    doc.setFontSize(13);
+    doc.text(`Fecha: ${date}`, 25, currentY);
+    currentY += 15;
+    
+    let dateTotalVales = 0;
+    let dateTotalArqueo = 0;
+    
+    Object.entries(workers).forEach(([workerName, boxes]) => {
+      // Worker header
+      doc.setFontSize(11);
+      doc.text(`Trabajador: ${workerName}`, 35, currentY);
+      currentY += 10;
+      
+      // Worker's boxes details
+      let workerTotalVales = 0;
+      let workerTotalArqueo = 0;
+      
+      boxes.forEach((box, index) => {
+        const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+        const valeAmount = Number(box.valeAmount) || 0;
+        
+        workerTotalVales += valeAmount;
+        workerTotalArqueo += boxTotal;
+        
+        doc.setFontSize(9);
+        doc.text(`  Bote ${index + 1}: Vale €${valeAmount.toFixed(2)} - Arqueo €${boxTotal.toFixed(2)} - Turno ${box.shift === 1 ? 'Mañana' : 'Tarde'}`, 45, currentY);
+        currentY += 8;
+      });
+      
+      // Worker subtotal
+      doc.setFontSize(10);
+      doc.text(`  TOTAL ${workerName}: Vales €${workerTotalVales.toFixed(2)} - Arqueo €${workerTotalArqueo.toFixed(2)}`, 40, currentY);
+      currentY += 15;
+      
+      dateTotalVales += workerTotalVales;
+      dateTotalArqueo += workerTotalArqueo;
+    });
+    
+    // Date total
+    doc.setFontSize(12);
+    doc.text(`GRAN TOTAL ${date}: Vales €${dateTotalVales.toFixed(2)} - Arqueo €${dateTotalArqueo.toFixed(2)}`, 25, currentY);
+    currentY += 20;
+    
+    grandTotalVales += dateTotalVales;
+    grandTotalArqueo += dateTotalArqueo;
+  });
+  
+  // Overall totals
+  doc.setFontSize(13);
+  doc.text(`TOTAL GENERAL: Vales €${grandTotalVales.toFixed(2)} - Arqueo €${grandTotalArqueo.toFixed(2)} - Diferencia €${(grandTotalArqueo - grandTotalVales).toFixed(2)}`, 20, currentY);
+  currentY += 30;
+  
+  // Section 2: Complete denomination breakdown
+  doc.setFontSize(14);
+  doc.text('ARQUEO TOTAL POR DENOMINACIONES', 20, currentY);
+  currentY += 20;
   
   // Bills breakdown
-  doc.setFontSize(14);
-  doc.text('DESGLOSE DE BILLETES', 20, 130);
+  doc.setFontSize(13);
+  doc.text('BILLETES:', 25, currentY);
+  currentY += 15;
   
-  let currentY = 145;
   const bills = DENOMINATIONS.filter(d => d.type === 'bill');
   let billsTotal = 0;
   
@@ -125,19 +201,19 @@ export function generateByDatePDF(data: PDFReportData): void {
     billsTotal += value;
     
     doc.setFontSize(10);
-    doc.text(`${bill.label}: ${count} unidades = €${value.toFixed(2)}`, 30, currentY);
+    doc.text(`  ${bill.label}: ${count} unidades = €${value.toFixed(2)}`, 35, currentY);
     currentY += 10;
   });
   
   doc.setFontSize(11);
-  doc.text(`TOTAL BILLETES: €${billsTotal.toFixed(2)}`, 20, currentY + 5);
+  doc.text(`TOTAL BILLETES: €${billsTotal.toFixed(2)}`, 30, currentY + 5);
+  currentY += 25;
   
   // Coins breakdown
-  currentY += 25;
-  doc.setFontSize(14);
-  doc.text('DESGLOSE DE MONEDAS', 20, currentY);
-  
+  doc.setFontSize(13);
+  doc.text('MONEDAS:', 25, currentY);
   currentY += 15;
+  
   const coins = DENOMINATIONS.filter(d => d.type === 'coin');
   let coinsTotal = 0;
   
@@ -147,21 +223,21 @@ export function generateByDatePDF(data: PDFReportData): void {
     coinsTotal += value;
     
     doc.setFontSize(10);
-    doc.text(`${coin.label}: ${count} unidades = €${value.toFixed(2)}`, 30, currentY);
+    doc.text(`  ${coin.label}: ${count} unidades = €${value.toFixed(2)}`, 35, currentY);
     currentY += 10;
   });
   
   doc.setFontSize(11);
-  doc.text(`TOTAL MONEDAS: €${coinsTotal.toFixed(2)}`, 20, currentY + 5);
-  
-  // Summary table
+  doc.text(`TOTAL MONEDAS: €${coinsTotal.toFixed(2)}`, 30, currentY + 5);
   currentY += 25;
+  
+  // Final summary table
   const summaryData = [
     ['Total Billetes', `€${billsTotal.toFixed(2)}`],
     ['Total Monedas', `€${coinsTotal.toFixed(2)}`],
     ['TOTAL ARQUEO', `€${(billsTotal + coinsTotal).toFixed(2)}`],
     ['Total Vales', `€${data.totalVales.toFixed(2)}`],
-    ['DIFERENCIA', `€${data.difference.toFixed(2)}`]
+    ['DIFERENCIA FINAL', `€${data.difference.toFixed(2)}`]
   ];
   
   doc.autoTable({
