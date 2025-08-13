@@ -28,7 +28,7 @@ export default function StepReports() {
     }
   };
 
-  // Save reconciliation mutation
+  // Save reconciliation mutation (updated to also save reports)
   const saveReconciliationMutation = useMutation({
     mutationFn: async () => {
       const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
@@ -63,6 +63,7 @@ export default function StepReports() {
         totalBreakdown: calculateBreakdownTotal(box.breakdown || {}).toString()
       }));
 
+      // Save the reconciliation first
       const response = await fetch('/api/history/complete', {
         method: 'POST',
         headers: {
@@ -75,11 +76,41 @@ export default function StepReports() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Error al guardar el arqueo');
+        throw new Error('Failed to save reconciliation');
       }
 
-      return response.json();
+      const result = await response.json();
+      const sessionId = result.session.id;
+
+      // Generate and save both reports (we'll use the existing functions for now)
+      const byCashBoxReport = generateReportByBoxes(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
+      const byDateReport = generateReportByDate(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
+
+      // Save by cash box report
+      await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          reportType: 'by_cash_box',
+          reportTitle: `Informe por Botes - ${sessionData.sessionDate}`,
+          reportContent: byCashBoxReport
+        })
+      });
+
+      // Save by date report  
+      await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          reportType: 'by_date',
+          reportTitle: `Informe por Fecha - ${sessionData.sessionDate}`,
+          reportContent: byDateReport
+        })
+      });
+
+      return result;
     },
     onSuccess: () => {
       toast({
@@ -166,6 +197,17 @@ export default function StepReports() {
       return;
     }
 
+    if (reportType === 'boxes') {
+      const reportContent = generateReportByBoxes(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
+      openReportWindow(reportContent, "Informe por Botes de Caja");
+    } else if (reportType === 'date') {
+      const reportContent = generateReportByDate(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
+      openReportWindow(reportContent, "Informe por Fecha");
+    }
+  };
+
+  // Helper function to open report window
+  const openReportWindow = (htmlContent: string, title: string) => {
     const reportWindow = window.open('', '_blank');
     if (!reportWindow) {
       toast({
@@ -176,54 +218,9 @@ export default function StepReports() {
       return;
     }
 
-    let htmlContent = '';
-    
-    if (reportType === 'boxes') {
-      htmlContent = generateReportByBoxes(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
-    } else {
-      htmlContent = generateReportByDate(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
-    }
-
     reportWindow.document.write(htmlContent);
     reportWindow.document.close();
     reportWindow.focus();
-  };
-
-  const handlePrint = (reportType: 'boxes' | 'date') => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast({
-        title: "Error",
-        description: "No se pudo abrir la ventana de impresión. Verifica que no esté bloqueada por el navegador.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
-    
-    if (validCashBoxes.length === 0) {
-      toast({
-        title: "No hay datos",
-        description: "No hay botes válidos para imprimir el informe.",
-        variant: "destructive"
-      });
-      printWindow.close();
-      return;
-    }
-
-    let htmlContent = '';
-    
-    if (reportType === 'boxes') {
-      htmlContent = generateReportByBoxes(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
-    } else {
-      htmlContent = generateReportByDate(validCashBoxes, totalVales, totalBreakdown, difference, state.auditorName);
-    }
-
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
   };
 
   const generateReportByBoxes = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number, auditorName: string) => {
@@ -242,6 +239,9 @@ export default function StepReports() {
           th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
           th { background-color: #f2f2f2; font-weight: bold; }
           .total-row { background-color: #e8f4f8; font-weight: bold; }
+          .print-button { margin: 20px 0; text-align: center; }
+          .print-button button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+          @media print { .print-button { display: none; } }
           .footer { margin-top: 30px; font-size: 12px; text-align: center; }
           .print-button { 
             position: fixed; 

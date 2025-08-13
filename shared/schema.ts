@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
 import { pgTable, text, varchar, decimal, integer, date, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -99,10 +99,41 @@ export const savedNames = pgTable("saved_names", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// New table for storing generated reports
+export const savedReports = pgTable("saved_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").references(() => reconciliationSessions.id),
+  reportType: text("report_type").notNull(), // 'by_cash_box' or 'by_date'
+  reportTitle: text("report_title").notNull(),
+  reportContent: text("report_content").notNull(), // HTML content of the report
+  generatedAt: timestamp("generated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
 export const insertSavedNameSchema = createInsertSchema(savedNames).omit({
   id: true,
   createdAt: true
 });
 
+export const insertSavedReportSchema = createInsertSchema(savedReports).omit({
+  id: true,
+  createdAt: true,
+  generatedAt: true
+});
+
 export type SavedName = typeof savedNames.$inferSelect;
 export type InsertSavedName = z.infer<typeof insertSavedNameSchema>;
+export type SavedReport = typeof savedReports.$inferSelect;
+export type InsertSavedReport = z.infer<typeof insertSavedReportSchema>;
+
+// Add relations for saved reports
+export const savedReportsRelations = relations(savedReports, ({ one }) => ({
+  session: one(reconciliationSessions, {
+    fields: [savedReports.sessionId],
+    references: [reconciliationSessions.id]
+  })
+}));
+
+export const reconciliationSessionsReportsRelation = relations(reconciliationSessions, ({ many }) => ({
+  reports: many(savedReports)
+}));

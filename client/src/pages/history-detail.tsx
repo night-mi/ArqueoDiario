@@ -42,6 +42,35 @@ export default function HistoryDetailPage() {
     enabled: !!sessionId
   });
 
+  // Query for saved reports
+  const { data: savedReports } = useQuery({
+    queryKey: ['/api/reports/session', sessionId],
+    queryFn: async () => {
+      const response = await fetch(`/api/reports/session/${sessionId}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!sessionId
+  });
+
+  const openSavedReport = async (reportId: string) => {
+    try {
+      const response = await fetch(`/api/reports/${reportId}`);
+      if (!response.ok) throw new Error('Report not found');
+      
+      const report = await response.json();
+      
+      const reportWindow = window.open('', '_blank');
+      if (reportWindow) {
+        reportWindow.document.write(report.reportContent);
+        reportWindow.document.close();
+        reportWindow.focus();
+      }
+    } catch (error) {
+      console.error('Error opening report:', error);
+    }
+  };
+
   const formatCurrency = (amount: string) => {
     return `€${parseFloat(amount).toFixed(2)}`;
   };
@@ -269,6 +298,42 @@ export default function HistoryDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Saved Reports Section */}
+      {savedReports && savedReports.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Informes Guardados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {savedReports.map((report: any) => (
+                <div key={report.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium">{report.reportTitle}</h4>
+                    <p className="text-sm text-gray-600">
+                      Tipo: {report.reportType === 'by_cash_box' ? 'Por Botes' : 'Por Fecha'}
+                      {' • '}
+                      Generado: {formatDateTime(report.generatedAt)}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => openSavedReport(report.id)}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Ver Informe
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

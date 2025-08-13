@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCashBoxSchema, insertReconciliationSessionSchema, insertSavedNameSchema } from "@shared/schema";
+import { insertCashBoxSchema, insertReconciliationSessionSchema, insertSavedNameSchema, insertSavedReportSchema } from "@shared/schema";
 import { z } from "zod";
 
 const createCashBoxesSchema = z.object({
@@ -176,6 +176,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       res.status(400).json({ message: "Error creating complete reconciliation", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Report management routes
+  // Save a report
+  app.post("/api/reports", async (req, res) => {
+    try {
+      const reportData = insertSavedReportSchema.parse(req.body);
+      const report = await storage.saveReport(reportData);
+      res.status(201).json(report);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid report data", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Get reports by session ID
+  app.get("/api/reports/session/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const reports = await storage.getReportsBySession(sessionId);
+      res.json(reports);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching reports", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Get specific report by ID
+  app.get("/api/reports/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const report = await storage.getReportById(id);
+      if (!report) {
+        return res.status(404).json({ message: "Report not found" });
+      }
+      res.json(report);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching report", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Delete a report
+  app.delete("/api/reports/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteReport(id);
+      res.json({ message: "Report deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting report", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 

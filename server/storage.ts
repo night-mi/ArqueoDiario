@@ -1,6 +1,6 @@
-import { type CashBox, type InsertCashBox, type ReconciliationSession, type InsertReconciliationSession, type SavedName, type InsertSavedName } from "@shared/schema";
+import { type CashBox, type InsertCashBox, type ReconciliationSession, type InsertReconciliationSession, type SavedName, type InsertSavedName, type SavedReport, type InsertSavedReport } from "@shared/schema";
 import { db } from "./db";
-import { savedNames, cashBoxes, reconciliationSessions } from "@shared/schema";
+import { savedNames, cashBoxes, reconciliationSessions, savedReports } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -27,6 +27,12 @@ export interface IStorage {
   getSavedNames(type: 'worker' | 'auditor'): Promise<SavedName[]>;
   addSavedName(name: InsertSavedName): Promise<SavedName>;
   removeSavedName(id: string): Promise<void>;
+
+  // Report management
+  saveReport(reportData: InsertSavedReport): Promise<SavedReport>;
+  getReportsBySession(sessionId: string): Promise<SavedReport[]>;
+  getReportById(id: string): Promise<SavedReport | undefined>;
+  deleteReport(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -126,6 +132,25 @@ export class DatabaseStorage implements IStorage {
       session: createdSession,
       cashBoxes: createdCashBoxes
     };
+  }
+
+  // Report management methods
+  async saveReport(reportData: InsertSavedReport): Promise<SavedReport> {
+    const [report] = await db.insert(savedReports).values(reportData).returning();
+    return report;
+  }
+
+  async getReportsBySession(sessionId: string): Promise<SavedReport[]> {
+    return await db.select().from(savedReports).where(eq(savedReports.sessionId, sessionId)).orderBy(savedReports.generatedAt);
+  }
+
+  async getReportById(id: string): Promise<SavedReport | undefined> {
+    const [report] = await db.select().from(savedReports).where(eq(savedReports.id, id));
+    return report || undefined;
+  }
+
+  async deleteReport(id: string): Promise<void> {
+    await db.delete(savedReports).where(eq(savedReports.id, id));
   }
 }
 
