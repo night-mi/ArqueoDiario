@@ -148,6 +148,8 @@ const LoadingMessages = {
 
 export default function LoadingScreen({ isVisible, message, type = "default" }: LoadingScreenProps) {
   const displayMessage = message || LoadingMessages[type as keyof typeof LoadingMessages];
+  
+  console.log('LoadingScreen:', { isVisible, message, type }); // Debug log
 
   return (
     <AnimatePresence>

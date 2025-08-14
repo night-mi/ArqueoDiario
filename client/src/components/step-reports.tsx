@@ -566,8 +566,8 @@ export default function StepReports() {
 
         ${sortedDates.map(date => {
           const dateCashBoxes = groupedByDate[date];
-          const dateVales = dateCashBoxes.reduce((sum, cb) => sum + cb.valeAmount, 0);
-          const dateBreakdown = dateCashBoxes.reduce((sum, cb) => sum + calculateBreakdownTotal(cb.breakdown), 0);
+          const dateVales = dateCashBoxes.reduce((sum: number, cb: any) => sum + cb.valeAmount, 0);
+          const dateBreakdown = dateCashBoxes.reduce((sum: number, cb: any) => sum + calculateBreakdownTotal(cb.breakdown), 0);
           const dateDifference = dateBreakdown - dateVales;
 
           return `

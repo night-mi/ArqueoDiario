@@ -22,7 +22,7 @@ export default function CashReconciliationWizard() {
 
   // Handle step transitions with loading animations
   useEffect(() => {
-    if (state.currentStep !== prevStep) {
+    if (state.currentStep !== prevStep && prevStep !== 0) {
       const stepMessages = {
         1: "Preparando configuración...",
         2: "Iniciando entrada de datos...",
@@ -44,9 +44,11 @@ export default function CashReconciliationWizard() {
       const timer = setTimeout(() => {
         hideLoading();
         setPrevStep(state.currentStep);
-      }, 1200);
+      }, 1500);
 
       return () => clearTimeout(timer);
+    } else {
+      setPrevStep(state.currentStep);
     }
   }, [state.currentStep, prevStep, showLoading, hideLoading]);
 
@@ -154,8 +156,23 @@ export default function CashReconciliationWizard() {
           {renderCurrentStep()}
         </main>
 
-        {/* Floating Cancel Button */}
-        <div className="fixed bottom-6 right-6">
+        {/* Floating Action Buttons */}
+        <div className="fixed bottom-6 right-6 flex flex-col gap-3">
+          {/* Test Animation Button */}
+          <Button
+            variant="secondary"
+            size="icon"
+            className="w-12 h-12 rounded-full shadow-lg hover:shadow-xl"
+            onClick={() => {
+              showLoading("processing", "Probando animaciones...");
+              setTimeout(() => hideLoading(), 2000);
+            }}
+            title="Probar Animaciones"
+          >
+            ⚡
+          </Button>
+          
+          {/* Cancel Button */}
           <Button
             variant="destructive"
             size="icon"
