@@ -18,7 +18,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         
     - name: Setup Java
@@ -37,7 +37,7 @@ jobs:
       run: npm run build
       
     - name: Install Capacitor CLI
-      run: npm install -g @capacitor/cli
+      run: npm install -g @capacitor/cli@latest
       
     - name: Copy web assets to Android
       run: npx cap copy android
