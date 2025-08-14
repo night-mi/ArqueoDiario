@@ -78,6 +78,7 @@ The application uses several key design patterns:
 - **Enhanced Reports**: Added detailed bills/coins breakdown in consolidated date reports
 - **Report Consistency**: Unified visual styling between both report types (by boxes and by date)
 - **Print Optimization**: Professional print buttons on both reports with clean layouts
+- **Date Sorting**: Cash box reports now automatically sort by date chronologically (oldest to newest)
 
 ### Current Features
 - **5-Step Wizard**: Complete offline cash reconciliation workflow
