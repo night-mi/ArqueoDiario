@@ -168,15 +168,23 @@ export default function StepValidation() {
                             💰 Desglose del Arqueo
                           </h5>
                           <div className="bg-gray-50 p-3 rounded-md">
-                            <div className="font-mono text-sm text-gray-800 leading-relaxed">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 font-mono text-xs">
                               {DENOMINATIONS
                                 .filter(denom => (cashBox.breakdown?.[denom.value] || 0) > 0)
                                 .map(denom => {
                                   const count = cashBox.breakdown?.[denom.value] || 0;
                                   const total = count * parseFloat(denom.value);
-                                  return `${count}x${denom.value}=${total.toFixed(2)}€`;
-                                })
-                                .join('; ')}
+                                  return (
+                                    <div key={denom.value} className="bg-white p-2 rounded text-center border">
+                                      <div className="font-semibold text-gray-800">
+                                        {count}x{denom.value}
+                                      </div>
+                                      <div className="text-gray-600">
+                                        {total.toFixed(2)}€
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                             </div>
                           </div>
                         </div>

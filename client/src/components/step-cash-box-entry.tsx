@@ -15,7 +15,7 @@ import { ArrowLeft, ArrowRight, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { type CashBoxFormData } from "@shared/schema";
 import { calculateBreakdownTotal } from "@/lib/denominations";
-import InfoTooltip from "@/components/info-tooltip";
+
 
 const cashBoxSchema = z.object({
   date: z.string().min(1, "La fecha es requerida"),
@@ -205,12 +205,8 @@ export default function StepCashBoxEntry() {
                   </h4>
                   
                   <div>
-                    <Label htmlFor="date" className="flex items-center">
+                    <Label htmlFor="date">
                       Fecha
-                      <InfoTooltip 
-                        content="Selecciona la fecha en que se realizó este bote de caja. Puede ser de cualquier día."
-                        className="ml-2"
-                      />
                     </Label>
                     <Input
                       id="date"
@@ -223,12 +219,8 @@ export default function StepCashBoxEntry() {
                   </div>
 
                   <div>
-                    <Label className="flex items-center">
+                    <Label>
                       Trabajador
-                      <InfoTooltip 
-                        content="Selecciona el nombre del trabajador que realizó este bote de caja."
-                        className="ml-2"
-                      />
                     </Label>
                     <Select
                       value={form.watch("workerName")}
@@ -254,12 +246,8 @@ export default function StepCashBoxEntry() {
                   </div>
 
                   <div>
-                    <Label className="flex items-center">
+                    <Label>
                       Turno
-                      <InfoTooltip 
-                        content="Selecciona el turno en que trabajó esta persona: Turno 1 para mañana, Turno 2 para tarde."
-                        className="ml-2"
-                      />
                     </Label>
                     <RadioGroup
                       value={form.watch("shift")?.toString()}
@@ -278,12 +266,8 @@ export default function StepCashBoxEntry() {
                   </div>
 
                   <div>
-                    <Label htmlFor="valeAmount" className="flex items-center">
+                    <Label htmlFor="valeAmount">
                       Cantidad del Vale
-                      <InfoTooltip 
-                        content="Introduce el importe exacto que aparece en el vale o ticket de caja de este trabajador."
-                        className="ml-2"
-                      />
                     </Label>
                     <div className="relative">
                       <span className="absolute left-3 top-2 text-gray-500">€</span>

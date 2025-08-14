@@ -92,7 +92,7 @@ export default function StepReports() {
     reportWindow.focus();
   };
 
-  // Helper function to format breakdown in "4x500=2000; 2x200=400" style
+  // Helper function to format breakdown in column format for tables
   const formatBreakdown = (breakdown: Record<string, number>) => {
     return DENOMINATIONS
       .filter(denom => breakdown[denom.value] && breakdown[denom.value] > 0)
@@ -101,7 +101,7 @@ export default function StepReports() {
         const total = count * parseFloat(denom.value);
         return `${count}x${denom.value}=${total.toFixed(2)}€`;
       })
-      .join('; ');
+      .join('<br>');
   };
 
   const generateReportByBoxes = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number) => {
@@ -467,15 +467,20 @@ export default function StepReports() {
 
             <div class="breakdown-summary">
               <h4>🔢 Desglose Total de Billetes y Monedas</h4>
-              <div style="font-family: monospace; font-size: 14px; line-height: 1.6; color: #2c3e50; background: white; padding: 15px; border-radius: 4px;">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; background: white; padding: 15px; border-radius: 4px;">
                 ${DENOMINATIONS
                   .filter(denom => globalBreakdown[denom.value] && globalBreakdown[denom.value] > 0)
                   .map(denom => {
                     const count = globalBreakdown[denom.value];
                     const total = count * parseFloat(denom.value);
-                    return `${count}x${denom.value}=${total.toFixed(2)}€`;
+                    return `
+                      <div style="text-align: center; border: 1px solid #e0e0e0; padding: 8px; border-radius: 4px;">
+                        <div style="font-weight: bold; font-size: 13px;">${count}x${denom.value}</div>
+                        <div style="font-size: 12px; color: #666;">${total.toFixed(2)}€</div>
+                      </div>
+                    `;
                   })
-                  .join('; ')}
+                  .join('')}
               </div>
             </div>
 
