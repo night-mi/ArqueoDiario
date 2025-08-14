@@ -310,239 +310,265 @@ export default function StepReports() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Arqueo de Caja - Informe por Fecha</title>
+        <title>Arqueo de Caja - Informe Consolidado por Fechas</title>
         <meta charset="UTF-8">
         <style>
-          * { box-sizing: border-box; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
           body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; 
-            padding: 12px;
-            line-height: 1.3;
-            color: #2c3e50;
-            font-size: 10px;
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            font-size: 12px;
+            line-height: 1.4;
+            color: #1a1a1a;
+            background: #ffffff;
+            margin: 8mm;
           }
+          
           .header { 
             text-align: center; 
-            margin-bottom: 20px;
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 12px;
+            margin-bottom: 25px;
+            border-bottom: 4px solid #2563eb;
+            padding-bottom: 20px;
           }
+          
           .header h1 {
-            color: #2c3e50;
-            margin: 0 0 8px 0;
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
           }
+          
           .header p {
-            margin: 0;
-            color: #7f8c8d;
-            font-size: 10px;
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
           }
+          
+          .overall-stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+          }
+          
+          .stat-card {
+            text-align: center;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          }
+          
+          .stat-label {
+            display: block;
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+          }
+          
+          .stat-value {
+            display: block;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+          }
+          
+          .stat-card.positive .stat-value { color: #059669; }
+          .stat-card.negative .stat-value { color: #dc2626; }
+          .stat-card.primary .stat-value { color: #2563eb; }
           
           .date-section { 
-            margin-bottom: 20px; 
+            margin-bottom: 40px; 
             page-break-inside: avoid;
-            break-inside: avoid;
           }
+          
           .date-header { 
-            background: linear-gradient(135deg, #3498db, #2980b9); 
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             color: white;
-            padding: 8px 12px; 
-            border-radius: 6px;
-            margin-bottom: 10px;
-            font-weight: 600;
-            font-size: 12px;
-            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
-          }
-          
-          .cash-boxes-compact {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 10px;
-            margin-bottom: 12px;
-          }
-          
-          .cash-box-compact {
-            border: 1px solid #e1e8ed;
-            border-radius: 6px;
-            padding: 8px;
-            background: linear-gradient(145deg, #ffffff, #f8f9fa);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            page-break-inside: avoid;
-            break-inside: avoid;
-          }
-          
-          .worker-line {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 6px;
-            padding-bottom: 4px;
-            border-bottom: 1px solid #ecf0f1;
           }
           
-          .worker-name {
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 10px;
-          }
-          
-          .shift-mini {
-            background: #34495e;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-size: 8px;
+          .date-summary {
+            font-size: 14px;
             font-weight: 500;
+            opacity: 0.9;
           }
           
-          .amounts-compact {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 4px;
-            margin-bottom: 6px;
+          .cash-boxes-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
           }
           
-          .amount-mini {
+          .cash-boxes-table th {
+            background: linear-gradient(135deg, #374151, #4b5563);
+            color: white;
+            padding: 12px 10px;
             text-align: center;
-            padding: 3px;
-            border-radius: 3px;
-            font-size: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
           }
           
-          .vale-mini { background: #e8f4fd; color: #2980b9; }
-          .breakdown-mini { background: #e8f5e8; color: #27ae60; }
-          .difference-mini { background: #fdf2e8; color: #e67e22; }
-          .difference-mini.negative { background: #fadbd8; color: #e74c3c; }
+          .cash-boxes-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+          }
           
-          .amount-label-mini {
-            display: block;
-            font-size: 7px;
-            margin-bottom: 1px;
+          .cash-boxes-table tbody tr {
+            background: white;
+          }
+          
+          .cash-boxes-table tbody tr:nth-child(even) {
+            background: #f9fafb;
+          }
+          
+          .cash-boxes-table tbody tr:hover {
+            background: #f3f4f6;
+          }
+          
+          .worker-cell {
+            font-weight: 600;
+            color: #1f2937;
+            text-align: center;
+          }
+          
+          .shift-cell {
+            text-align: center;
             font-weight: 500;
           }
           
-          .amount-value-mini {
-            display: block;
-            font-size: 9px;
+          .amount-cell {
+            text-align: right;
             font-weight: 600;
+            font-family: 'Courier New', monospace;
           }
           
-          .breakdown-compact {
-            background: #f8f9fa;
-            border-radius: 4px;
-            padding: 6px;
-            margin-top: 6px;
-            min-height: 60px;
-          }
+          .difference-positive { color: #059669; }
+          .difference-negative { color: #dc2626; }
+          .difference-zero { color: #6b7280; }
           
-          .breakdown-title-mini {
-            font-size: 7px;
-            color: #7f8c8d;
-            margin-bottom: 3px;
-            font-weight: 600;
-            text-transform: uppercase;
-          }
-          
-          .breakdown-column {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-          }
-          
-          .breakdown-row-item {
-            background: white;
-            padding: 2px 4px;
-            border-radius: 2px;
-            border: 1px solid #ecf0f1;
-            font-size: 7px;
-            line-height: 1.1;
-            text-align: left;
-            white-space: nowrap;
-          }
-          
-          .day-summary-compact {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: white;
+          .breakdown-cell {
+            background: #f8fafc;
             padding: 8px;
             border-radius: 6px;
-            margin-top: 10px;
-            box-shadow: 0 2px 8px rgba(44, 62, 80, 0.3);
+            border: 1px solid #e2e8f0;
           }
           
-          .summary-compact {
+          .breakdown-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 8px;
+            gap: 4px;
+            font-size: 10px;
           }
           
-          .summary-mini {
-            text-align: center;
-            background: rgba(255,255,255,0.1);
-            padding: 4px;
+          .breakdown-item {
+            background: white;
+            padding: 3px 5px;
             border-radius: 4px;
-          }
-          
-          .summary-label-mini {
-            display: block;
-            font-size: 7px;
-            margin-bottom: 2px;
-            opacity: 0.8;
-            text-transform: uppercase;
+            text-align: center;
+            border: 1px solid #d1d5db;
             font-weight: 500;
           }
           
-          .summary-value-mini {
-            display: block;
-            font-size: 10px;
+          .day-totals {
+            background: linear-gradient(135deg, #065f46, #047857);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            box-shadow: 0 4px 12px rgba(6, 95, 70, 0.3);
+          }
+          
+          .day-totals-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            text-align: center;
+          }
+          
+          .day-total-item h4 {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          
+          .day-total-item .value {
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+          }
+          
+          .global-breakdown {
+            background: linear-gradient(135deg, #fef3c7, #fbbf24);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border: 2px solid #f59e0b;
+          }
+          
+          .global-breakdown h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #92400e;
             font-weight: 700;
           }
           
-          .general-summary {
-            margin-top: 25px;
-            padding: 12px;
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 3px 12px rgba(39, 174, 96, 0.3);
-            page-break-inside: avoid;
+          .global-breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
           }
           
-          .general-summary h3 {
-            margin: 0 0 8px 0;
-            font-size: 14px;
+          .global-breakdown-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
             text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+          }
+          
+          .global-breakdown-item .denom {
+            font-weight: 700;
+            font-size: 14px;
+            color: #92400e;
+          }
+          
+          .global-breakdown-item .total {
+            font-size: 12px;
+            color: #6b7280;
+            font-family: 'Courier New', monospace;
           }
           
           @media print {
-            body { 
-              margin: 8px; 
-              padding: 4px;
-              font-size: 9px;
-            }
-            .date-section { 
-              page-break-inside: avoid;
-              break-inside: avoid;
-              margin-bottom: 15px;
-            }
-            .cash-boxes-compact {
-              grid-template-columns: repeat(2, 1fr);
-              gap: 8px;
-            }
-            .cash-box-compact {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-            .day-summary-compact {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-            .general-summary {
-              page-break-before: always;
-            }
-            .header h1 { font-size: 16px; }
-            .date-header { font-size: 11px; }
+            body { margin: 5mm; font-size: 11px; }
+            .date-section { page-break-inside: avoid; margin-bottom: 25px; }
+            .global-breakdown { page-break-before: always; }
+            .overall-stats { grid-template-columns: repeat(5, 1fr); gap: 10px; }
           }
         </style>
       </head>
@@ -559,6 +585,29 @@ export default function StepReports() {
           })}</p>
         </div>
 
+        <div class="overall-stats">
+          <div class="stat-card primary">
+            <span class="stat-label">Total Fechas</span>
+            <span class="stat-value">${sortedDates.length}</span>
+          </div>
+          <div class="stat-card primary">
+            <span class="stat-label">Total Botes</span>
+            <span class="stat-value">${cashBoxes.length}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Total Vales</span>
+            <span class="stat-value">€${totalVales.toFixed(2)}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Total Arqueos</span>
+            <span class="stat-value">€${totalBreakdown.toFixed(2)}</span>
+          </div>
+          <div class="stat-card ${difference === 0 ? '' : difference > 0 ? 'positive' : 'negative'}">
+            <span class="stat-label">Diferencia</span>
+            <span class="stat-value">${difference > 0 ? '+' : ''}€${difference.toFixed(2)}</span>
+          </div>
+        </div>
+
         ${sortedDates.map(date => {
           const dateCashBoxes = groupedByDate[date];
           const dateVales = dateCashBoxes.reduce((sum, cb) => sum + cb.valeAmount, 0);
@@ -568,79 +617,81 @@ export default function StepReports() {
           return `
             <div class="date-section">
               <div class="date-header">
-                📅 ${new Date(date).toLocaleDateString('es-ES', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
+                <div>
+                  📅 ${new Date(date).toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </div>
+                <div class="date-summary">
+                  ${dateCashBoxes.length} bote${dateCashBoxes.length !== 1 ? 's' : ''} • €${dateVales.toFixed(2)} vales • €${dateBreakdown.toFixed(2)} arqueos
+                </div>
               </div>
               
-              <div class="cash-boxes-compact">
-                ${dateCashBoxes.map(cashBox => {
-                  const cbTotal = calculateBreakdownTotal(cashBox.breakdown);
-                  const cbDifference = cbTotal - cashBox.valeAmount;
-                  
-                  const nonZeroBreakdown = DENOMINATIONS
-                    .filter(denom => cashBox.breakdown[denom.value] && cashBox.breakdown[denom.value] > 0)
-                    .map(denom => {
-                      const count = cashBox.breakdown[denom.value];
-                      const total = (count * parseFloat(denom.value)).toFixed(2);
-                      return `${count} × ${denom.value} = €${total}`;
-                    });
-                  
-                  return `
-                    <div class="cash-box-compact">
-                      <div class="worker-line">
-                        <span class="worker-name">${cashBox.workerName}</span>
-                        <span class="shift-mini">T${cashBox.shift}</span>
-                      </div>
-                      
-                      <div class="amounts-compact">
-                        <div class="amount-mini vale-mini">
-                          <span class="amount-label-mini">Vale</span>
-                          <span class="amount-value-mini">€${cashBox.valeAmount.toFixed(2)}</span>
-                        </div>
-                        <div class="amount-mini breakdown-mini">
-                          <span class="amount-label-mini">Arqueo</span>
-                          <span class="amount-value-mini">€${cbTotal.toFixed(2)}</span>
-                        </div>
-                        <div class="amount-mini difference-mini ${cbDifference < 0 ? 'negative' : ''}">
-                          <span class="amount-label-mini">Dif.</span>
-                          <span class="amount-value-mini">€${cbDifference.toFixed(2)}</span>
-                        </div>
-                      </div>
-                      
-                      <div class="breakdown-compact">
-                        <div class="breakdown-title-mini">Desglose</div>
-                        <div class="breakdown-column">
-                          ${nonZeroBreakdown.map(item => `
-                            <div class="breakdown-row-item">${item}</div>
-                          `).join('')}
-                        </div>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
+              <table class="cash-boxes-table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%">Trabajador</th>
+                    <th style="width: 8%">Turno</th>
+                    <th style="width: 12%">Vale</th>
+                    <th style="width: 12%">Arqueo</th>
+                    <th style="width: 12%">Diferencia</th>
+                    <th style="width: 36%">Desglose Detallado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${dateCashBoxes.map(cashBox => {
+                    const cbTotal = calculateBreakdownTotal(cashBox.breakdown);
+                    const cbDifference = cbTotal - cashBox.valeAmount;
+                    const diffClass = cbDifference === 0 ? 'difference-zero' : cbDifference > 0 ? 'difference-positive' : 'difference-negative';
+                    
+                    const nonZeroBreakdown = DENOMINATIONS
+                      .filter(denom => cashBox.breakdown[denom.value] && cashBox.breakdown[denom.value] > 0)
+                      .map(denom => {
+                        const count = cashBox.breakdown[denom.value];
+                        const total = (count * parseFloat(denom.value)).toFixed(2);
+                        return `${count}×${denom.value}€ = €${total}`;
+                      });
+                    
+                    return `
+                      <tr>
+                        <td class="worker-cell">${cashBox.workerName}</td>
+                        <td class="shift-cell">T${cashBox.shift}</td>
+                        <td class="amount-cell">€${cashBox.valeAmount.toFixed(2)}</td>
+                        <td class="amount-cell">€${cbTotal.toFixed(2)}</td>
+                        <td class="amount-cell ${diffClass}">${cbDifference > 0 ? '+' : ''}€${cbDifference.toFixed(2)}</td>
+                        <td class="breakdown-cell">
+                          <div class="breakdown-grid">
+                            ${nonZeroBreakdown.map(item => `
+                              <div class="breakdown-item">${item}</div>
+                            `).join('')}
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
               
-              <div class="day-summary-compact">
-                <div class="summary-compact">
-                  <div class="summary-mini">
-                    <span class="summary-label-mini">Botes</span>
-                    <span class="summary-value-mini">${dateCashBoxes.length}</span>
+              <div class="day-totals">
+                <div class="day-totals-grid">
+                  <div class="day-total-item">
+                    <h4>Botes del Día</h4>
+                    <div class="value">${dateCashBoxes.length}</div>
                   </div>
-                  <div class="summary-mini">
-                    <span class="summary-label-mini">Tot. Vales</span>
-                    <span class="summary-value-mini">€${dateVales.toFixed(2)}</span>
+                  <div class="day-total-item">
+                    <h4>Total Vales</h4>
+                    <div class="value">€${dateVales.toFixed(2)}</div>
                   </div>
-                  <div class="summary-mini">
-                    <span class="summary-label-mini">Tot. Arqueos</span>
-                    <span class="summary-value-mini">€${dateBreakdown.toFixed(2)}</span>
+                  <div class="day-total-item">
+                    <h4>Total Arqueos</h4>
+                    <div class="value">€${dateBreakdown.toFixed(2)}</div>
                   </div>
-                  <div class="summary-mini">
-                    <span class="summary-label-mini">Diferencia</span>
-                    <span class="summary-value-mini" style="color: ${dateDifference >= 0 ? '#2ecc71' : '#e74c3c'}">€${dateDifference.toFixed(2)}</span>
+                  <div class="day-total-item">
+                    <h4>Diferencia</h4>
+                    <div class="value" style="color: ${dateDifference >= 0 ? '#10b981' : '#ef4444'}">${dateDifference > 0 ? '+' : ''}€${dateDifference.toFixed(2)}</div>
                   </div>
                 </div>
               </div>
@@ -648,29 +699,22 @@ export default function StepReports() {
           `;
         }).join('')}
         
-        <div class="general-summary">
-          <h3>📈 Resumen General del Periodo</h3>
-          <div class="summary-compact">
-            <div class="summary-mini">
-              <span class="summary-label-mini">Fechas</span>
-              <span class="summary-value-mini">${sortedDates.length}</span>
-            </div>
-            <div class="summary-mini">
-              <span class="summary-label-mini">Total Botes</span>
-              <span class="summary-value-mini">${cashBoxes.length}</span>
-            </div>
-            <div class="summary-mini">
-              <span class="summary-label-mini">Total Vales</span>
-              <span class="summary-value-mini">€${totalVales.toFixed(2)}</span>
-            </div>
-            <div class="summary-mini">
-              <span class="summary-label-mini">Total Arqueos</span>
-              <span class="summary-value-mini">€${totalBreakdown.toFixed(2)}</span>
-            </div>
-            <div class="summary-mini">
-              <span class="summary-label-mini">Diferencia General</span>
-              <span class="summary-value-mini">€${difference.toFixed(2)}</span>
-            </div>
+        <div class="global-breakdown">
+          <h3>🔢 Desglose Global de Billetes y Monedas</h3>
+          <div class="global-breakdown-grid">
+            ${DENOMINATIONS
+              .filter(denom => globalBreakdown[denom.value] && globalBreakdown[denom.value] > 0)
+              .map(denom => {
+                const count = globalBreakdown[denom.value];
+                const total = (count * parseFloat(denom.value)).toFixed(2);
+                return `
+                  <div class="global-breakdown-item">
+                    <div class="denom">${count} × ${denom.value}€</div>
+                    <div class="total">= €${total}</div>
+                  </div>
+                `;
+              })
+              .join('')}
           </div>
         </div>
       </body>
