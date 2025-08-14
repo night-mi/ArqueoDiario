@@ -564,15 +564,50 @@ export default function StepReports() {
             font-family: 'Courier New', monospace;
           }
           
+          .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+          }
+          
+          .print-button:hover {
+            background: linear-gradient(135deg, #047857, #065f46);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
+          }
+          
+          .print-button:active {
+            transform: translateY(0);
+          }
+          
           @media print {
             body { margin: 5mm; font-size: 11px; }
             .date-section { page-break-inside: avoid; margin-bottom: 25px; }
             .global-breakdown { page-break-before: always; }
             .overall-stats { grid-template-columns: repeat(5, 1fr); gap: 10px; }
+            .print-button { display: none !important; }
           }
         </style>
       </head>
       <body>
+        <button class="print-button" onclick="window.print()">
+          🖨️ Imprimir Informe
+        </button>
+        
         <div class="header">
           <h1>📊 Informe Consolidado por Fechas</h1>
           <p>Generado el: ${new Date().toLocaleDateString('es-ES', { 
