@@ -165,39 +165,19 @@ export default function StepValidation() {
                       {(bills.length > 0 || coins.length > 0) && (
                         <div className="mt-4 p-4 bg-white rounded-lg border">
                           <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            💰 Desglose del Arqueo (campos con valor)
+                            💰 Desglose del Arqueo
                           </h5>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {bills.length > 0 && (
-                              <div>
-                                <p className="text-xs font-medium text-green-600 mb-2 uppercase tracking-wide">💵 Billetes</p>
-                                <div className="space-y-1">
-                                  {bills.map(bill => (
-                                    <div key={bill.value} className="flex justify-between text-sm">
-                                      <span className="text-gray-600">{bill.label}</span>
-                                      <span className="font-mono bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs">
-                                        {cashBox.breakdown?.[bill.value] || 0} ud.
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            {coins.length > 0 && (
-                              <div>
-                                <p className="text-xs font-medium text-amber-600 mb-2 uppercase tracking-wide">🪙 Monedas</p>
-                                <div className="space-y-1">
-                                  {coins.map(coin => (
-                                    <div key={coin.value} className="flex justify-between text-sm">
-                                      <span className="text-gray-600">{coin.label}</span>
-                                      <span className="font-mono bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-xs">
-                                        {cashBox.breakdown?.[coin.value] || 0} ud.
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
+                          <div className="bg-gray-50 p-3 rounded-md">
+                            <div className="font-mono text-sm text-gray-800 leading-relaxed">
+                              {DENOMINATIONS
+                                .filter(denom => (cashBox.breakdown?.[denom.value] || 0) > 0)
+                                .map(denom => {
+                                  const count = cashBox.breakdown?.[denom.value] || 0;
+                                  const total = count * parseFloat(denom.value);
+                                  return `${count}x${denom.value}=${total.toFixed(2)}€`;
+                                })
+                                .join('; ')}
+                            </div>
                           </div>
                         </div>
                       )}

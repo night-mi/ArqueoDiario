@@ -92,11 +92,15 @@ export default function StepReports() {
     reportWindow.focus();
   };
 
-  // Helper function to format breakdown in "4x500; 2x200" style
+  // Helper function to format breakdown in "4x500=2000; 2x200=400" style
   const formatBreakdown = (breakdown: Record<string, number>) => {
     return DENOMINATIONS
       .filter(denom => breakdown[denom.value] && breakdown[denom.value] > 0)
-      .map(denom => `${breakdown[denom.value]}x${denom.value.toString().replace('0.', '')}€`)
+      .map(denom => {
+        const count = breakdown[denom.value];
+        const total = count * parseFloat(denom.value);
+        return `${count}x${denom.value}=${total.toFixed(2)}€`;
+      })
       .join('; ');
   };
 
@@ -463,22 +467,22 @@ export default function StepReports() {
 
             <div class="breakdown-summary">
               <h4>🔢 Desglose Total de Billetes y Monedas</h4>
-              <div class="breakdown-grid">
+              <div style="font-family: monospace; font-size: 14px; line-height: 1.6; color: #2c3e50; background: white; padding: 15px; border-radius: 4px;">
                 ${DENOMINATIONS
                   .filter(denom => globalBreakdown[denom.value] && globalBreakdown[denom.value] > 0)
-                  .map(denom => `
-                    <div class="breakdown-item">
-                      <strong>${globalBreakdown[denom.value]}x${denom.value.toString().replace('0.', '')}€</strong><br>
-                      <small>€${(globalBreakdown[denom.value] * parseFloat(denom.value)).toFixed(2)}</small>
-                    </div>
-                  `).join('')}
+                  .map(denom => {
+                    const count = globalBreakdown[denom.value];
+                    const total = count * parseFloat(denom.value);
+                    return `${count}x${denom.value}=${total.toFixed(2)}€`;
+                  })
+                  .join('; ')}
               </div>
             </div>
 
             ${Object.keys(groupedByDate).sort().map(date => {
               const dateBoxes = groupedByDate[date];
-              const dateTotalVales = dateBoxes.reduce((sum, box) => sum + (Number(box.valeAmount) || 0), 0);
-              const dateTotalBreakdown = dateBoxes.reduce((sum, box) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
+              const dateTotalVales = dateBoxes.reduce((sum: number, box: any) => sum + (Number(box.valeAmount) || 0), 0);
+              const dateTotalBreakdown = dateBoxes.reduce((sum: number, box: any) => sum + calculateBreakdownTotal(box.breakdown || {}), 0);
               const dateDifference = dateTotalBreakdown - dateTotalVales;
 
               return `
@@ -514,7 +518,7 @@ export default function StepReports() {
                         </tr>
                       </thead>
                       <tbody>
-                        ${dateBoxes.map(box => {
+                        ${dateBoxes.map((box: any) => {
                           const boxTotal = calculateBreakdownTotal(box.breakdown || {});
                           const boxDiff = boxTotal - (Number(box.valeAmount) || 0);
                           const status = boxDiff === 0 ? 'ok' : 'warning';
