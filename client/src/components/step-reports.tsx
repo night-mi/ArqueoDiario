@@ -105,6 +105,8 @@ export default function StepReports() {
   };
 
   const generateReportByBoxes = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number) => {
+    // Sort cash boxes by date (ascending order - oldest first)
+    const sortedCashBoxes = [...cashBoxes].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     return `
       <!DOCTYPE html>
       <html>
@@ -231,7 +233,7 @@ export default function StepReports() {
               </div>
               <div class="info-card">
                 <div class="label">Total de Botes</div>
-                <div class="value">${cashBoxes.length}</div>
+                <div class="value">${sortedCashBoxes.length}</div>
               </div>
             </div>
 
@@ -266,7 +268,7 @@ export default function StepReports() {
                 </tr>
               </thead>
               <tbody>
-                ${cashBoxes.map(box => {
+                ${sortedCashBoxes.map(box => {
                   const boxTotal = calculateBreakdownTotal(box.breakdown || {});
                   const boxDiff = boxTotal - (Number(box.valeAmount) || 0);
                   const status = boxDiff === 0 ? 'ok' : 'warning';
