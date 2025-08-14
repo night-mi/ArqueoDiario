@@ -1,10 +1,28 @@
 @echo off
-echo Iniciando AqueoDiario - Sistema de Arqueos...
+title AqueoDiario - Sistema de Arqueos
+cls
+echo ===============================================
+echo   AqueoDiario - Sistema de Arqueos
+echo   Gasolinera El Alto
+echo ===============================================
 echo.
-echo La aplicacion se abrira en tu navegador en http://localhost:5000
+echo Iniciando servidor local...
 echo.
-echo Para cerrar la aplicacion, presiona Ctrl+C
+echo IMPORTANTE:
+echo - La aplicacion se abrira automaticamente
+echo - Funciona completamente SIN INTERNET
+echo - Para CERRAR: presiona Ctrl+C aqui
 echo.
-start http://localhost:5000
-index-win.exe
+echo Abriendo navegador en http://localhost:5000
+echo.
+
+REM Esperar 3 segundos antes de abrir navegador
+timeout /t 3 /nobreak >nul
+start "" http://localhost:5000
+
+REM Ejecutar la aplicacion
+"%~dp0index-win.exe"
+
+echo.
+echo La aplicacion se ha cerrado.
 pause
