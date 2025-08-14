@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useReconciliation } from "@/context/reconciliation-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,10 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowLeft, ExternalLink, FileText, Calendar, Calculator, Printer } from "lucide-react";
 import { DENOMINATIONS, calculateBreakdownTotal } from "@/lib/denominations";
 import { useToast } from "@/hooks/use-toast";
+import { containerVariants, itemVariants, buttonVariants, successVariants } from "@/components/ui/transition-wrapper";
+import { useLoading } from "@/components/ui/loading-screen";
 
 export default function StepReports() {
   const { state, dispatch } = useReconciliation();
   const { toast } = useToast();
+  const { showLoading, hideLoading } = useLoading();
   const [activeReport, setActiveReport] = useState("by-boxes");
 
   const handlePrevious = () => {
@@ -66,13 +70,23 @@ export default function StepReports() {
       return;
     }
 
-    if (reportType === 'boxes') {
-      const reportContent = generateReportByBoxes(validCashBoxes, totalVales, totalBreakdown, difference);
-      openReportWindow(reportContent, "Informe por Botes de Caja");
-    } else if (reportType === 'date') {
-      const reportContent = generateReportByDate(validCashBoxes, totalVales, totalBreakdown, difference);
-      openReportWindow(reportContent, "Informe por Fecha");
-    }
+    showLoading("generating", `Generando informe por ${reportType === 'boxes' ? 'botes' : 'fecha'}...`);
+    
+    setTimeout(() => {
+      if (reportType === 'boxes') {
+        const reportContent = generateReportByBoxes(validCashBoxes, totalVales, totalBreakdown, difference);
+        openReportWindow(reportContent, "Informe por Botes de Caja");
+      } else if (reportType === 'date') {
+        const reportContent = generateReportByDate(validCashBoxes, totalVales, totalBreakdown, difference);
+        openReportWindow(reportContent, "Informe por Fecha");
+      }
+      
+      hideLoading();
+      toast({
+        title: "Informe generado",
+        description: "El informe se ha abierto en una nueva ventana.",
+      });
+    }, 1200);
   };
 
   // Helper function to open report window
@@ -106,7 +120,7 @@ export default function StepReports() {
 
   const generateReportByBoxes = (cashBoxes: any[], totalVales: number, totalBreakdown: number, difference: number) => {
     // Sort cash boxes by date (ascending order - oldest first)
-    const sortedCashBoxes = [...cashBoxes].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sortedCashBoxes = [...cashBoxes].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
     return `
       <!DOCTYPE html>
       <html>

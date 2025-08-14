@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { motion } from "framer-motion";
 import { useReconciliation } from "@/context/reconciliation-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CashBreakdownForm from "@/components/cash-breakdown-form";
+import { containerVariants, itemVariants, buttonVariants, cardHoverVariants } from "@/components/ui/transition-wrapper";
 
 import { ArrowLeft, ArrowRight, Save, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -215,24 +217,40 @@ export default function StepCashBoxEntry() {
   const progressPercentage = Math.round(((state.currentCashBoxIndex + 1) / state.totalCashBoxes) * 75) + 25;
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <Card className="shadow-sm">
+    <motion.div 
+      className="max-w-6xl mx-auto"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={itemVariants}>
+        <Card className="shadow-sm">
           <CardContent className="p-6">
-            <div className="mb-6">
+            <motion.div className="mb-6" variants={itemVariants}>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Registro de Bote{" "}
-                <span className="bg-primary text-white px-2 py-1 rounded text-sm ml-2">
+                <motion.span 
+                  className="bg-primary text-white px-2 py-1 rounded text-sm ml-2"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring" }}
+                >
                   {state.currentCashBoxIndex + 1}
-                </span>{" "}
+                </motion.span>{" "}
                 de {state.totalCashBoxes}
               </h3>
               <p className="text-gray-600">Ingresa los datos completos para este bote.</p>
-            </div>
+            </motion.div>
 
             <form onSubmit={form.handleSubmit(handleNextCashBox)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
                 {/* Basic Information */}
-                <div className="space-y-4">
+                <motion.div className="space-y-4" variants={itemVariants}>
                   <h4 className="font-medium text-gray-900 border-b border-gray-200 pb-2">
                     Información Básica
                   </h4>
@@ -378,10 +396,10 @@ export default function StepCashBoxEntry() {
                       <p className="text-sm text-red-600 mt-1">{form.formState.errors.valeAmount.message}</p>
                     )}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Cash Breakdown */}
-                <div className="space-y-4">
+                <motion.div className="space-y-4" variants={itemVariants}>
                   <h4 className="font-medium text-gray-900 border-b border-gray-200 pb-2">
                     Arqueo Detallado
                   </h4>
@@ -393,36 +411,60 @@ export default function StepCashBoxEntry() {
                       form.trigger("breakdown");
                     }}
                   />
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
-              <div className="flex justify-between mt-8">
-                <Button 
-                  type="button"
-                  variant="outline"
-                  onClick={handlePrevious}
+              <motion.div 
+                className="flex justify-between mt-8"
+                variants={itemVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
                 >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Anterior
-                </Button>
-                <div className="flex space-x-3">
                   <Button 
                     type="button"
-                    variant="secondary"
-                    onClick={form.handleSubmit(handleSaveAndContinue)}
+                    variant="outline"
+                    onClick={handlePrevious}
                   >
-                    <Save className="mr-2 h-4 w-4" />
-                    Guardar y Continuar
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Anterior
                   </Button>
-                  <Button type="submit">
-                    {state.currentCashBoxIndex < state.totalCashBoxes - 1 ? "Siguiente Bote" : "Ir a Validación"}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+                </motion.div>
+                <div className="flex space-x-3">
+                  <motion.div
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
+                  >
+                    <Button 
+                      type="button"
+                      variant="secondary"
+                      onClick={form.handleSubmit(handleSaveAndContinue)}
+                    >
+                      <Save className="mr-2 h-4 w-4" />
+                      Guardar y Continuar
+                    </Button>
+                  </motion.div>
+                  <motion.div
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
+                  >
+                    <Button type="submit">
+                      {state.currentCashBoxIndex < state.totalCashBoxes - 1 ? "Siguiente Bote" : "Ir a Validación"}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
             </form>
           </CardContent>
         </Card>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
