@@ -486,20 +486,65 @@ export default function StepReports() {
 
             <div class="breakdown-summary">
               <h4>🔢 Desglose Total de Billetes y Monedas</h4>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; background: white; padding: 15px; border-radius: 4px;">
-                ${DENOMINATIONS
-                  .filter(denom => globalBreakdown[denom.value] && globalBreakdown[denom.value] > 0)
-                  .map(denom => {
-                    const count = globalBreakdown[denom.value];
-                    const total = count * parseFloat(denom.value);
-                    return `
-                      <div style="text-align: center; border: 1px solid #e0e0e0; padding: 8px; border-radius: 4px;">
-                        <div style="font-weight: bold; font-size: 13px;">${count}x${denom.value}</div>
-                        <div style="font-size: 12px; color: #666;">${total.toFixed(2)}€</div>
-                      </div>
-                    `;
-                  })
-                  .join('')}
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: white; padding: 15px; border-radius: 4px;">
+                <div>
+                  <h5 style="margin-bottom: 10px; color: #2c3e50; font-size: 14px; font-weight: 600;">💵 Billetes</h5>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px;">
+                    ${DENOMINATIONS
+                      .filter(denom => parseFloat(denom.value) >= 5 && globalBreakdown[denom.value] && globalBreakdown[denom.value] > 0)
+                      .map(denom => {
+                        const count = globalBreakdown[denom.value];
+                        const total = count * parseFloat(denom.value);
+                        return `
+                          <div style="text-align: center; border: 1px solid #e0e0e0; padding: 6px; border-radius: 4px; background: #f8f9fa;">
+                            <div style="font-weight: bold; font-size: 12px;">${count}×${denom.value}€</div>
+                            <div style="font-size: 11px; color: #666;">${total.toFixed(2)}€</div>
+                          </div>
+                        `;
+                      })
+                      .join('')}
+                  </div>
+                  <div style="margin-top: 10px; text-align: center; font-weight: 600; color: #2c3e50;">
+                    Total Billetes: ${DENOMINATIONS
+                      .filter(denom => parseFloat(denom.value) >= 5 && globalBreakdown[denom.value])
+                      .reduce((sum, denom) => sum + (globalBreakdown[denom.value] || 0), 0)} unidades
+                  </div>
+                  <div style="text-align: center; font-size: 14px; font-weight: 700; color: #27ae60;">
+                    ${DENOMINATIONS
+                      .filter(denom => parseFloat(denom.value) >= 5 && globalBreakdown[denom.value])
+                      .reduce((sum, denom) => sum + ((globalBreakdown[denom.value] || 0) * parseFloat(denom.value)), 0)
+                      .toFixed(2)}€
+                  </div>
+                </div>
+                <div>
+                  <h5 style="margin-bottom: 10px; color: #2c3e50; font-size: 14px; font-weight: 600;">🪙 Monedas</h5>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px;">
+                    ${DENOMINATIONS
+                      .filter(denom => parseFloat(denom.value) < 5 && globalBreakdown[denom.value] && globalBreakdown[denom.value] > 0)
+                      .map(denom => {
+                        const count = globalBreakdown[denom.value];
+                        const total = count * parseFloat(denom.value);
+                        return `
+                          <div style="text-align: center; border: 1px solid #e0e0e0; padding: 6px; border-radius: 4px; background: #fff8f0;">
+                            <div style="font-weight: bold; font-size: 12px;">${count}×${denom.value}€</div>
+                            <div style="font-size: 11px; color: #666;">${total.toFixed(2)}€</div>
+                          </div>
+                        `;
+                      })
+                      .join('')}
+                  </div>
+                  <div style="margin-top: 10px; text-align: center; font-weight: 600; color: #2c3e50;">
+                    Total Monedas: ${DENOMINATIONS
+                      .filter(denom => parseFloat(denom.value) < 5 && globalBreakdown[denom.value])
+                      .reduce((sum, denom) => sum + (globalBreakdown[denom.value] || 0), 0)} unidades
+                  </div>
+                  <div style="text-align: center; font-size: 14px; font-weight: 700; color: #f39c12;">
+                    ${DENOMINATIONS
+                      .filter(denom => parseFloat(denom.value) < 5 && globalBreakdown[denom.value])
+                      .reduce((sum, denom) => sum + ((globalBreakdown[denom.value] || 0) * parseFloat(denom.value)), 0)
+                      .toFixed(2)}€
+                  </div>
+                </div>
               </div>
             </div>
 

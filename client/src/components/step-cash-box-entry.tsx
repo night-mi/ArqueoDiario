@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CashBreakdownForm from "@/components/cash-breakdown-form";
 
-import { ArrowLeft, ArrowRight, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { type CashBoxFormData } from "@shared/schema";
 import { calculateBreakdownTotal } from "@/lib/denominations";
@@ -27,24 +27,27 @@ const cashBoxSchema = z.object({
 
 type CashBoxSchemaType = z.infer<typeof cashBoxSchema>;
 
-// Predefined list of workers
-const WORKERS = [
-  "Ana García",
-  "Carlos López", 
-  "María Rodríguez",
-  "José Martínez",
-  "Carmen Sánchez",
-  "David Fernández",
-  "Laura González",
-  "Roberto Díaz",
-  "Isabel Ruiz",
-  "Antonio Moreno"
-];
+// Function to manage workers from localStorage
+const getStoredWorkers = (): string[] => {
+  try {
+    const stored = localStorage.getItem('gas-station-workers');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveWorkers = (workers: string[]) => {
+  localStorage.setItem('gas-station-workers', JSON.stringify(workers));
+};
 
 export default function StepCashBoxEntry() {
   const { state, dispatch } = useReconciliation();
   const { toast } = useToast();
   const [workerName, setWorkerName] = useState("");
+  const [storedWorkers, setStoredWorkers] = useState<string[]>(getStoredWorkers());
+  const [isAddingWorker, setIsAddingWorker] = useState(false);
+  const [newWorkerName, setNewWorkerName] = useState("");
 
   const getCurrentDate = () => {
     const today = new Date();
@@ -97,6 +100,36 @@ export default function StepCashBoxEntry() {
     
     form.reset(resetValues);
   }, [state.currentCashBoxIndex, form]);
+
+  const handleAddWorker = () => {
+    if (newWorkerName.trim()) {
+      const updatedWorkers = [...storedWorkers, newWorkerName.trim()];
+      setStoredWorkers(updatedWorkers);
+      saveWorkers(updatedWorkers);
+      form.setValue("workerName", newWorkerName.trim());
+      setWorkerName(newWorkerName.trim());
+      setNewWorkerName("");
+      setIsAddingWorker(false);
+      toast({
+        title: "Trabajador agregado",
+        description: `${newWorkerName.trim()} ha sido agregado a la lista.`,
+      });
+    }
+  };
+
+  const handleRemoveWorker = (workerToRemove: string) => {
+    const updatedWorkers = storedWorkers.filter(worker => worker !== workerToRemove);
+    setStoredWorkers(updatedWorkers);
+    saveWorkers(updatedWorkers);
+    if (workerName === workerToRemove) {
+      setWorkerName("");
+      form.setValue("workerName", "");
+    }
+    toast({
+      title: "Trabajador eliminado",
+      description: `${workerToRemove} ha sido eliminado de la lista.`,
+    });
+  };
 
   const handlePrevious = () => {
     if (state.currentCashBoxIndex > 0) {
@@ -222,24 +255,85 @@ export default function StepCashBoxEntry() {
                     <Label>
                       Trabajador
                     </Label>
-                    <Select
-                      value={form.watch("workerName")}
-                      onValueChange={(value) => {
-                        form.setValue("workerName", value);
-                        setWorkerName(value);
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Selecciona un trabajador" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {WORKERS.map((worker) => (
-                          <SelectItem key={worker} value={worker}>
-                            {worker}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {!isAddingWorker ? (
+                      <div className="flex gap-2">
+                        <Select
+                          value={form.watch("workerName")}
+                          onValueChange={(value) => {
+                            if (value === "__add_new__") {
+                              setIsAddingWorker(true);
+                              return;
+                            }
+                            form.setValue("workerName", value);
+                            setWorkerName(value);
+                          }}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Selecciona o agrega un trabajador" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__add_new__" className="text-primary font-medium">
+                              <Plus className="h-4 w-4 mr-2" />
+                              Agregar nuevo trabajador...
+                            </SelectItem>
+                            {storedWorkers.length > 0 && <div className="h-px bg-gray-200 my-1" />}
+                            {storedWorkers.map((worker) => (
+                              <div key={worker} className="flex items-center justify-between group">
+                                <SelectItem value={worker} className="flex-1">
+                                  {worker}
+                                </SelectItem>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 ml-2"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveWorker(worker);
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nombre del trabajador"
+                          value={newWorkerName}
+                          onChange={(e) => setNewWorkerName(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddWorker();
+                            }
+                          }}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleAddWorker}
+                          disabled={!newWorkerName.trim()}
+                          size="sm"
+                        >
+                          <Save className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setIsAddingWorker(false);
+                            setNewWorkerName("");
+                          }}
+                          size="sm"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                     {form.formState.errors.workerName && (
                       <p className="text-sm text-red-600 mt-1">{form.formState.errors.workerName.message}</p>
                     )}
