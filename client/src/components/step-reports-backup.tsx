@@ -674,6 +674,36 @@ export default function StepReports() {
       </html>
     `;
   };
+                      </thead>
+                      <tbody>
+                        ${dateBoxes.map((box: any) => {
+                          const boxTotal = calculateBreakdownTotal(box.breakdown || {});
+                          const boxDiff = boxTotal - (Number(box.valeAmount) || 0);
+                          const status = boxDiff === 0 ? 'ok' : 'warning';
+                          
+                          return `
+                            <tr>
+                              <td>${box.workerName}</td>
+                              <td>Turno ${box.shift}</td>
+                              <td>€${(Number(box.valeAmount) || 0).toFixed(2)}</td>
+                              <td>€${boxTotal.toFixed(2)}</td>
+                              <td class="status ${status}">${boxDiff > 0 ? '+' : ''}€${boxDiff.toFixed(2)}</td>
+                              <td style="font-size: 11px;">${formatBreakdown(box.breakdown || {})}</td>
+                            </tr>
+                          `;
+                        }).join('')}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  };
 
   const { validCashBoxes, totalVales, totalBreakdown, difference } = calculateTotals();
   const globalBreakdown = calculateTotalBreakdown();
