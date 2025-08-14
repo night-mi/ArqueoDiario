@@ -358,8 +358,8 @@ export default function StepReports() {
           
           .cash-boxes-compact {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 10px;
             margin-bottom: 12px;
           }
           
@@ -431,9 +431,10 @@ export default function StepReports() {
           
           .breakdown-compact {
             background: #f8f9fa;
-            border-radius: 3px;
-            padding: 4px;
-            margin-top: 4px;
+            border-radius: 4px;
+            padding: 6px;
+            margin-top: 6px;
+            min-height: 60px;
           }
           
           .breakdown-title-mini {
@@ -444,19 +445,20 @@ export default function StepReports() {
             text-transform: uppercase;
           }
           
-          .breakdown-line {
-            font-size: 7px;
-            line-height: 1.1;
+          .breakdown-column {
             display: flex;
-            flex-wrap: wrap;
-            gap: 2px;
+            flex-direction: column;
+            gap: 1px;
           }
           
-          .breakdown-mini-item {
+          .breakdown-row-item {
             background: white;
-            padding: 1px 3px;
+            padding: 2px 4px;
             border-radius: 2px;
             border: 1px solid #ecf0f1;
+            font-size: 7px;
+            line-height: 1.1;
+            text-align: left;
             white-space: nowrap;
           }
           
@@ -525,8 +527,8 @@ export default function StepReports() {
               margin-bottom: 15px;
             }
             .cash-boxes-compact {
-              grid-template-columns: repeat(3, 1fr);
-              gap: 6px;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 8px;
             }
             .cash-box-compact {
               page-break-inside: avoid;
@@ -583,7 +585,8 @@ export default function StepReports() {
                     .filter(denom => cashBox.breakdown[denom.value] && cashBox.breakdown[denom.value] > 0)
                     .map(denom => {
                       const count = cashBox.breakdown[denom.value];
-                      return `${count}×${denom.value}`;
+                      const total = (count * parseFloat(denom.value)).toFixed(2);
+                      return `${count} × ${denom.value} = €${total}`;
                     });
                   
                   return `
@@ -610,9 +613,9 @@ export default function StepReports() {
                       
                       <div class="breakdown-compact">
                         <div class="breakdown-title-mini">Desglose</div>
-                        <div class="breakdown-line">
+                        <div class="breakdown-column">
                           ${nonZeroBreakdown.map(item => `
-                            <span class="breakdown-mini-item">${item}</span>
+                            <div class="breakdown-row-item">${item}</div>
                           `).join('')}
                         </div>
                       </div>
