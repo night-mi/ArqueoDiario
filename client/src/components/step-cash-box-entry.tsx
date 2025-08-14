@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CashBreakdownForm from "@/components/cash-breakdown-form";
-import { NameManager } from "@/components/name-manager";
+
 import { ArrowLeft, ArrowRight, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { type CashBoxFormData } from "@shared/schema";
@@ -27,7 +27,19 @@ const cashBoxSchema = z.object({
 
 type CashBoxSchemaType = z.infer<typeof cashBoxSchema>;
 
-// Removed predefined workers - now using NameManager
+// Predefined list of workers
+const WORKERS = [
+  "Ana García",
+  "Carlos López", 
+  "María Rodríguez",
+  "José Martínez",
+  "Carmen Sánchez",
+  "David Fernández",
+  "Laura González",
+  "Roberto Díaz",
+  "Isabel Ruiz",
+  "Antonio Moreno"
+];
 
 export default function StepCashBoxEntry() {
   const { state, dispatch } = useReconciliation();
@@ -170,10 +182,8 @@ export default function StepCashBoxEntry() {
   const progressPercentage = Math.round(((state.currentCashBoxIndex + 1) / state.totalCashBoxes) * 75) + 25;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Main Content */}
-      <div className="lg:col-span-2">
-        <Card className="shadow-sm">
+    <div className="max-w-6xl mx-auto">
+      <Card className="shadow-sm">
           <CardContent className="p-6">
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -213,14 +223,34 @@ export default function StepCashBoxEntry() {
                   </div>
 
                   <div>
-                    <Label>Trabajador Seleccionado</Label>
-                    <div className="p-3 bg-gray-50 rounded border">
-                      {workerName ? (
-                        <p className="font-medium">{workerName}</p>
-                      ) : (
-                        <p className="text-gray-500 italic">Selecciona un trabajador en la barra lateral</p>
-                      )}
-                    </div>
+                    <Label className="flex items-center">
+                      Trabajador
+                      <InfoTooltip 
+                        content="Selecciona el nombre del trabajador que realizó este bote de caja."
+                        className="ml-2"
+                      />
+                    </Label>
+                    <Select
+                      value={form.watch("workerName")}
+                      onValueChange={(value) => {
+                        form.setValue("workerName", value);
+                        setWorkerName(value);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecciona un trabajador" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {WORKERS.map((worker) => (
+                          <SelectItem key={worker} value={worker}>
+                            {worker}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {form.formState.errors.workerName && (
+                      <p className="text-sm text-red-600 mt-1">{form.formState.errors.workerName.message}</p>
+                    )}
                   </div>
 
                   <div>
@@ -315,78 +345,6 @@ export default function StepCashBoxEntry() {
             </form>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Sidebar */}
-      <div className="lg:col-span-1">
-        <div className="space-y-6">
-          {/* Worker Name Manager */}
-          <NameManager
-            type="worker"
-            title="Trabajadores"
-            onNameSelect={setWorkerName}
-            selectedName={workerName}
-          />
-
-          {/* Progress */}
-          <Card className="shadow-sm">
-            <CardContent className="p-4">
-              <h4 className="font-semibold text-gray-900 mb-4">Progreso</h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Bote Actual:</span>
-                  <span className="font-medium">{state.currentCashBoxIndex + 1} de {state.totalCashBoxes}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Completados:</span>
-                  <span className="font-medium">{processedCount}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Progreso Total:</span>
-                  <span className="font-medium text-primary">{progressPercentage}%</span>
-                </div>
-              </div>
-              
-              <div className="mt-4">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-primary h-2 rounded-full transition-all duration-300" 
-                    style={{ width: `${progressPercentage}%` }}
-                  ></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Navigation */}
-          <Card className="shadow-sm">
-            <CardContent className="p-4">
-              <h4 className="font-semibold text-gray-900 mb-4">Navegación</h4>
-              <div className="flex flex-col space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handlePrevious}
-                  className="justify-start"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  {state.currentCashBoxIndex > 0 ? `Bote ${state.currentCashBoxIndex}` : 'Configuración'}
-                </Button>
-                
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={form.handleSubmit(handleSaveAndContinue)}
-                  className="justify-start"
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  Guardar Progreso
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
     </div>
   );
 }

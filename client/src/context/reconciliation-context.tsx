@@ -7,7 +7,6 @@ type ReconciliationAction =
   | { type: "UPDATE_CASH_BOX"; payload: { index: number; data: CashBoxFormData } }
   | { type: "SET_CURRENT_STEP"; payload: number }
   | { type: "SET_CURRENT_CASH_BOX_INDEX"; payload: number }
-  | { type: "SET_AUDITOR_NAME"; payload: string }
   | { type: "RESET" };
 
 const initialState: ReconciliationData = {
@@ -15,7 +14,6 @@ const initialState: ReconciliationData = {
   cashBoxes: [],
   currentStep: 1,
   currentCashBoxIndex: 0,
-  auditorName: "",
 };
 
 function reconciliationReducer(state: ReconciliationData, action: ReconciliationAction): ReconciliationData {
@@ -58,11 +56,7 @@ function reconciliationReducer(state: ReconciliationData, action: Reconciliation
         ...state,
         currentCashBoxIndex: action.payload
       };
-    case "SET_AUDITOR_NAME":
-      return {
-        ...state,
-        auditorName: action.payload
-      };
+
     case "RESET":
       return initialState;
     default:

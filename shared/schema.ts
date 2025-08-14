@@ -87,7 +87,6 @@ export type ReconciliationData = {
   cashBoxes: CashBoxFormData[];
   currentStep: number;
   currentCashBoxIndex: number;
-  auditorName: string;
 };
 
 // New table for saved names
