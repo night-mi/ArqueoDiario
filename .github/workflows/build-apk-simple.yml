@@ -68,7 +68,13 @@ jobs:
         npx cap --version
         
     - name: Add Android platform
-      run: npx cap add android
+      run: |
+        # Remove existing Android platform if it exists
+        if [ -d "android" ]; then
+          echo "Android platform exists, removing..."
+          rm -rf android
+        fi
+        npx cap add android
       
     - name: Update Android configuration
       run: |

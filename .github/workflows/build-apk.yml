@@ -101,6 +101,11 @@ jobs:
         
     - name: Initialize Capacitor Android
       run: |
+        # Remove existing Android platform if it exists
+        if [ -d "android" ]; then
+          echo "Android platform exists, removing..."
+          rm -rf android
+        fi
         npx cap add android
         
     - name: Configure Android project

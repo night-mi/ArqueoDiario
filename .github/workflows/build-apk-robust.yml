@@ -104,6 +104,11 @@ jobs:
         
     - name: Initialize Android project
       run: |
+        # Remove existing Android platform if it exists
+        if [ -d "android" ]; then
+          echo "Android platform exists, removing..."
+          rm -rf android
+        fi
         npx cap add android
         echo "Android project initialized"
         
