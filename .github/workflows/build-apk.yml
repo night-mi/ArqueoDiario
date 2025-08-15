@@ -97,34 +97,15 @@ jobs:
         path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
         
-    - name: Create Release (if on main branch)
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: v${{ github.run_number }}
-        name: AqueoDiario v${{ github.run_number }}
-        body: |
-          📱 Nueva versión de AqueoDiario - Sistema de Arqueos
-          
-          **Características:**
-          - ✅ Funciona completamente offline
-          - ✅ Gestión de trabajadores editable
-          - ✅ Informes detallados con billetes y monedas
-          - ✅ Ordenamiento cronológico por fechas
-          - ✅ Validación automática de diferencias
-          
-          **Instalación:**
-          1. Descargar el archivo APK
-          2. Habilitar "Fuentes desconocidas" en Android
-          3. Instalar la aplicación
-          
-          **Tamaño:** ~15-20 MB
-          **Compatible con:** Android 7.0 o superior (API 23+)
-          **Última actualización:** ${{ github.event.head_commit.timestamp }}
-        draft: false
-        prerelease: false
-        files: |
-          android/app/build/outputs/apk/debug/app-debug.apk
+    - name: Build Summary
+      run: |
+        echo "✅ APK compilado exitosamente!"
+        echo "📱 Archivo: app-debug.apk"
+        echo "💾 Tamaño: $(du -h android/app/build/outputs/apk/debug/app-debug.apk | cut -f1)"
+        echo "🔗 Descargar desde: Actions > Workflow runs > Artifacts"
+        echo ""
+        echo "📋 Para descargar:"
+        echo "1. Ve a la pestaña Actions de tu repositorio"
+        echo "2. Busca el workflow más reciente"
+        echo "3. Descarga el artifact 'arqueos-gasolinera-debug-v${{ github.run_number }}'"
+        echo "4. Instala en Android activando 'Fuentes desconocidas'"
