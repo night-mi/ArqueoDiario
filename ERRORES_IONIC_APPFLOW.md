@@ -33,7 +33,26 @@
    npx cap sync android
    ```
 
-## Error: "compileSdk 34 vs required 35" ⭐ TU ERROR
+## Error: "appflow.config.json missing entry for appId" ⭐ ERROR ACTUAL
+**Causa:** Ionic Appflow busca un appId específico en la configuración
+**Solución:**
+1. Usar el formato correcto con el appId exacto de Appflow:
+   ```json
+   {
+     "0f6b3473": {
+       "integrations": {
+         "capacitor": {
+           "android": {
+             "compileSdkVersion": 35,
+             "targetSdkVersion": 34
+           }
+         }
+       }
+     }
+   }
+   ```
+
+## Error: "compileSdk 34 vs required 35" ⭐ ERROR ANTERIOR
 **Causa:** Dependencias Android requieren compileSdk 35 pero Appflow usa 34
 **Solución:**
 1. Crear `appflow.config.json` con compileSdk 35:
