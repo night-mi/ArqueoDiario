@@ -31,9 +31,11 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        api-level: 35
-        target: android-35
-        arch: x86_64
+        packages: |
+          platform-tools
+          platforms;android-35
+          build-tools;35.0.0
+          cmdline-tools;latest
         
     - name: Accept Android SDK licenses
       run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses

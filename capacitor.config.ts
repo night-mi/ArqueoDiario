@@ -4,17 +4,11 @@ const config: CapacitorConfig = {
   appId: 'com.gasolinera.arqueos',
   appName: 'AqueoDiario',
   webDir: 'dist/public',
-  bundledWebRuntime: false,
   server: {
     androidScheme: 'https',
     cleartext: true
   },
   android: {
-    buildOptions: {
-      keystorePath: undefined,
-      keystoreAlias: undefined,
-      releaseType: 'APK'
-    },
     allowMixedContent: true
   },
   plugins: {
