@@ -1,0 +1,24 @@
+{
+  "apps": [
+    {
+      "appId": "com.gasolinera.arqueos",
+      "name": "AqueoDiario",
+      "integrations": {
+        "capacitor": {
+          "android": {
+            "minSdkVersion": 23,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 34
+          }
+        }
+      },
+      "environments": {
+        "production": {
+          "CAPACITOR_ANDROID_COMPILESDK": "35",
+          "CAPACITOR_ANDROID_TARGETSDK": "34",
+          "CAPACITOR_ANDROID_MINSDK": "23"
+        }
+      }
+    }
+  ]
+}

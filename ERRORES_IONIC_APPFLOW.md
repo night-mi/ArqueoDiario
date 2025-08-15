@@ -33,6 +33,28 @@
    npx cap sync android
    ```
 
+## Error: "compileSdk 34 vs required 35" ⭐ TU ERROR
+**Causa:** Dependencias Android requieren compileSdk 35 pero Appflow usa 34
+**Solución:**
+1. Crear `appflow.config.json` con compileSdk 35:
+   ```json
+   {
+     "apps": [{
+       "appId": "com.gasolinera.arqueos",
+       "integrations": {
+         "capacitor": {
+           "android": {
+             "compileSdkVersion": 35,
+             "targetSdkVersion": 34
+           }
+         }
+       }
+     }]
+   }
+   ```
+2. Crear `variables.gradle` con versiones compatibles
+3. Subir a GitHub y retry build
+
 ## Error: "Workspace not configured"
 **Causa:** Ionic no reconoce la estructura del proyecto
 **Solución:**
