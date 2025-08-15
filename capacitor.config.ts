@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.gasolinera.arqueos',
   appName: 'AqueoDiario',
-  webDir: 'dist/public',
+  webDir: 'dist',
   server: {
     androidScheme: 'https'
   },

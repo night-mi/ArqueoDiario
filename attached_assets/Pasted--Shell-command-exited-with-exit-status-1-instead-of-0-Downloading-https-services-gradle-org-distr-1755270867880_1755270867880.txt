@@ -1,0 +1,253 @@
+ Shell command exited with exit status 1 instead of 0.
+Downloading https://services.gradle.org/distributions/gradle-8.11.1-all.zip
+.....................10%......................20%......................30%......................40%......................50%......................60%......................70%......................80%......................90%......................100%
+
+Welcome to Gradle 8.11.1!
+
+Here are the highlights of this release:
+ - Parallel load and store for Configuration Cache
+ - Java compilation errors at the end of the build output
+ - Consolidated report for warnings and deprecations
+
+For more details see https://docs.gradle.org/8.11.1/release-notes.html
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :app
+WARNING: The option 'android.enableD8.desugaring' is deprecated.
+The current default is 'true'.
+It was removed in version 7.0 of the Android Gradle plugin.
+D8 desugaring is used by default, when applicable.
+WARNING: The option 'android.enableBuildCache' is deprecated.
+The current default is 'false'.
+It was removed in version 7.0 of the Android Gradle plugin.
+The Android-specific build caches were superseded by the Gradle build cache (https://docs.gradle.org/current/userguide/build_cache.html).
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResValues
+> Task :capacitor-android:preBuild UP-TO-DATE
+> Task :capacitor-android:preDebugBuild UP-TO-DATE
+> Task :capacitor-android:generateDebugResValues FROM-CACHE
+> Task :capacitor-android:generateDebugResources
+> Task :capacitor-android:packageDebugResources
+> Task :capacitor-cordova-android-plugins:preBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preDebugBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugResValues FROM-CACHE
+> Task :capacitor-cordova-android-plugins:generateDebugResources
+> Task :capacitor-cordova-android-plugins:packageDebugResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :capacitor-android:extractDeepLinksDebug FROM-CACHE
+> Task :capacitor-cordova-android-plugins:extractDeepLinksDebug FROM-CACHE
+> Task :capacitor-cordova-android-plugins:writeDebugAarMetadata
+> Task :capacitor-android:writeDebugAarMetadata
+> Task :capacitor-android:processDebugManifest
+> Task :capacitor-cordova-android-plugins:processDebugManifest
+> Task :app:packageDebugResources
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processApplicationManifestDebugForBundle
+> Task :app:checkDebugAarMetadata FAILED
+> Task :app:parseDebugLocalResources
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:checkDebugAarMetadata'.
+> A failure occurred while executing com.android.build.gradle.internal.tasks.CheckAarMetadataWorkAction
+   > 2 issues were found when checking AAR metadata:
+     
+       1.  Dependency 'androidx.core:core-ktx:1.15.0' requires libraries and applications that
+           depend on it to compile against version 35 or later of the
+           Android APIs.
+     
+           :app is currently compiled against android-34.
+     
+           Recommended action: Update this project to use a newer compileSdk
+           of at least 35, for example 35.
+     
+           Note that updating a library or application's compileSdk (which
+           allows newer APIs to be used) can be done separately from updating
+           targetSdk (which opts the app in to new runtime behavior) and
+           minSdk (which determines which devices the app can be installed
+           on).
+     
+       2.  Dependency 'androidx.core:core:1.15.0' requires libraries and applications that
+           depend on it to compile against version 35 or later of the
+           Android APIs.
+     
+           :app is currently compiled against android-34.
+     
+           Recommended action: Update this project to use a newer compileSdk
+           of at least 35, for example 35.
+     
+           Note that updating a library or application's compileSdk (which
+           allows newer APIs to be used) can be done separately from updating
+           targetSdk (which opts the app in to new runtime behavior) and
+           minSdk (which determines which devices the app can be installed
+           on).
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1m 23s
+24 actionable tasks: 20 executed, 4 from cache
+
+
++-----------------------------------------------+
+|               fastlane summary                |
++------+--------------------------+-------------+
+| Step | Action                   | Time (in s) |
++------+--------------------------+-------------+
+| 1    | add_extra_platforms      | 0           |
+| 2    | default_platform         | 0           |
+| 3    | prepare_environment      | 0           |
+| 4    | sentry_init              | 0           |
+| 5    | begin_building           | 0           |
+| 6    | build_summary            | 1           |
+| 7    | set_ionic_cli            | 1           |
+| 8    | detect_package_manager   | 0           |
+| 9    | add_git_credentials      | 0           |
+| 10   | get_appflow_config       | 0           |
+| 11   | dependency_install       | 31          |
+| 12   | create_capacitor_config  | 1           |
+| 13   | get_web_dir              | 0           |
+| 14   | modify_cap_web_config    | 0           |
+| 15   | set_java_home            | 0           |
+| 16   | build_pro_app            | 10          |
+| 17   | cap_sync                 | 3           |
+| 18   | cap_custom_deploy        | 0           |
+| 19   | modify_gradle_config     | 0           |
+| 💥   | bundledebug              | 84          |
+| 21   | upload_logs              | 3           |
+| 22   | sentry_capture_exception | 0           |
++------+--------------------------+-------------+
+
+[15:07:11]: fastlane finished with errors
+/usr/local/bundle/bin/fastlane: [!] Shell command exited with exit status 1 instead of 0. (FastlaneCore::Interface::FastlaneShellError)
+Downloading https://services.gradle.org/distributions/gradle-8.11.1-all.zip
+.....................10%......................20%......................30%......................40%......................50%......................60%......................70%......................80%......................90%......................100%
+
+Welcome to Gradle 8.11.1!
+
+Here are the highlights of this release:
+ - Parallel load and store for Configuration Cache
+ - Java compilation errors at the end of the build output
+ - Consolidated report for warnings and deprecations
+
+For more details see https://docs.gradle.org/8.11.1/release-notes.html
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :app
+WARNING: The option 'android.enableD8.desugaring' is deprecated.
+The current default is 'true'.
+It was removed in version 7.0 of the Android Gradle plugin.
+D8 desugaring is used by default, when applicable.
+WARNING: The option 'android.enableBuildCache' is deprecated.
+The current default is 'false'.
+It was removed in version 7.0 of the Android Gradle plugin.
+The Android-specific build caches were superseded by the Gradle build cache (https://docs.gradle.org/current/userguide/build_cache.html).
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResValues
+> Task :capacitor-android:preBuild UP-TO-DATE
+> Task :capacitor-android:preDebugBuild UP-TO-DATE
+> Task :capacitor-android:generateDebugResValues FROM-CACHE
+> Task :capacitor-android:generateDebugResources
+> Task :capacitor-android:packageDebugResources
+> Task :capacitor-cordova-android-plugins:preBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preDebugBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugResValues FROM-CACHE
+> Task :capacitor-cordova-android-plugins:generateDebugResources
+> Task :capacitor-cordova-android-plugins:packageDebugResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :capacitor-android:extractDeepLinksDebug FROM-CACHE
+> Task :capacitor-cordova-android-plugins:extractDeepLinksDebug FROM-CACHE
+> Task :capacitor-cordova-android-plugins:writeDebugAarMetadata
+> Task :capacitor-android:writeDebugAarMetadata
+> Task :capacitor-android:processDebugManifest
+> Task :capacitor-cordova-android-plugins:processDebugManifest
+> Task :app:packageDebugResources
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processApplicationManifestDebugForBundle
+> Task :app:checkDebugAarMetadata FAILED
+> Task :app:parseDebugLocalResources
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:checkDebugAarMetadata'.
+> A failure occurred while executing com.android.build.gradle.internal.tasks.CheckAarMetadataWorkAction
+   > 2 issues were found when checking AAR metadata:
+     
+       1.  Dependency 'androidx.core:core-ktx:1.15.0' requires libraries and applications that
+           depend on it to compile against version 35 or later of the
+           Android APIs.
+     
+           :app is currently compiled against android-34.
+     
+           Recommended action: Update this project to use a newer compileSdk
+           of at least 35, for example 35.
+     
+           Note that updating a library or application's compileSdk (which
+           allows newer APIs to be used) can be done separately from updating
+           targetSdk (which opts the app in to new runtime behavior) and
+           minSdk (which determines which devices the app can be installed
+           on).
+     
+       2.  Dependency 'androidx.core:core:1.15.0' requires libraries and applications that
+           depend on it to compile against version 35 or later of the
+           Android APIs.
+     
+           :app is currently compiled against android-34.
+     
+           Recommended action: Update this project to use a newer compileSdk
+           of at least 35, for example 35.
+     
+           Note that updating a library or application's compileSdk (which
+           allows newer APIs to be used) can be done separately from updating
+           targetSdk (which opts the app in to new runtime behavior) and
+           minSdk (which determines which devices the app can be installed
+           on).
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1m 23s
+24 actionable tasks: 20 executed, 4 from cache
+
+
+Running after_script
+Running after script...
+$ run "clean-up"
+
+Cleaning up project directory and file based variables
+
+ERROR: Job failed: command terminated with exit code 1
