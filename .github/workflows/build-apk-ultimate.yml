@@ -1,0 +1,231 @@
+name: Build Android APK (Ultimate)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Verify Java version
+      run: |
+        java -version
+        javac -version
+        echo "JAVA_HOME=$JAVA_HOME"
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 34
+        build-tools: 34.0.0
+        cmake-version: 3.22.1
+        
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+      
+    - name: Build web app
+      run: npm run build
+      
+    - name: Install Capacitor
+      run: npm install -g @capacitor/cli@6.1.2
+      
+    - name: Clean and add Android platform
+      run: |
+        rm -rf android
+        npx cap add android
+        
+    - name: Configure Android for Java 17
+      run: |
+        # Update build.gradle to force Java 17
+        cat > android/build.gradle << 'BUILD_EOF'
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+plugins {
+    id('com.android.application') version '8.6.1' apply false
+    id('com.android.library') version '8.6.1' apply false
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://www.jitpack.io' }
+    }
+}
+
+tasks.register('clean', Delete) {
+    delete rootProject.buildDir
+}
+
+subprojects {
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        options.encoding = 'UTF-8'
+    }
+}
+BUILD_EOF
+
+        # Update app/build.gradle
+        cat > android/app/build.gradle << 'APP_EOF'
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.gasolinera.arqueos"
+    compileSdkVersion 34
+    
+    defaultConfig {
+        applicationId "com.gasolinera.arqueos"
+        minSdkVersion 23
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             additionalParameters '--no-version-vectors'
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:1.7.0"
+    implementation "androidx.core:core:1.15.0"
+    implementation "androidx.fragment:fragment:1.8.5"
+    implementation "androidx.activity:activity:1.9.2"
+    implementation "androidx.constraintlayout:constraintlayout:2.1.4"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:1.2.0"
+    implementation "androidx.webkit:webkit:1.12.1"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    implementation "com.google.android.material:material:1.12.0"
+    testImplementation "junit:junit:4.13.2"
+    androidTestImplementation "androidx.test.ext:junit:1.2.1"
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.6.1"
+    implementation project(':capacitor-android')
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, ignoring")
+}
+APP_EOF
+
+        # Create variables.gradle with correct versions
+        cat > android/variables.gradle << 'VAR_EOF'
+ext {
+    minSdkVersion = 23
+    compileSdkVersion = 34
+    targetSdkVersion = 34
+    androidxActivityVersion = '1.9.2'
+    androidxAppCompatVersion = '1.7.0'
+    androidxCoordinatorLayoutVersion = '1.2.0'
+    androidxCoreVersion = '1.15.0'
+    androidxFragmentVersion = '1.8.5'
+    coreSplashScreenVersion = '1.0.1'
+    androidxWebkitVersion = '1.12.1'
+    junitVersion = '4.13.2'
+    androidxJunitVersion = '1.2.1'
+    androidxEspressoCoreVersion = '3.6.1'
+    cordovaAndroidVersion = '10.1.1'
+}
+VAR_EOF
+
+        # Create gradle.properties
+        cat > android/gradle.properties << 'PROPS_EOF'
+org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
+org.gradle.daemon=false
+org.gradle.parallel=false
+android.useAndroidX=true
+android.enableJetifier=true
+android.defaults.buildfeatures.buildconfig=true
+android.nonTransitiveRClass=false
+android.nonFinalResIds=false
+PROPS_EOF
+
+        # Update gradle wrapper properties to use compatible version
+        cat > android/gradle/wrapper/gradle-wrapper.properties << 'WRAPPER_EOF'
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.6-all.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+WRAPPER_EOF
+        
+    - name: Sync Capacitor
+      run: |
+        npx cap copy android
+        npx cap sync android
+        
+    - name: Build APK
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew clean assembleDebug --no-daemon --stacktrace --info
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: AqueoDiario-APK-v${{ github.run_number }}
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
+        
+    - name: Build Summary
+      run: |
+        APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+        if [ -f "$APK_PATH" ]; then
+          SIZE=$(du -h "$APK_PATH" | cut -f1)
+          echo "APK built successfully: $SIZE"
+          echo "Download from Actions > Artifacts"
+        else
+          echo "APK build failed"
+          ls -la android/app/build/outputs/apk/ || echo "APK directory not found"
+          exit 1
+        fi

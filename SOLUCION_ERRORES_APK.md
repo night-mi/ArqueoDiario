@@ -53,23 +53,33 @@ echo "84831b9409646a918e30573bab4c9c91346d8abd" > android-sdk-preview-license
 
 ---
 
-## Error: Versiones Incompatibles
+## Error: "invalid source release: 21"
 
 ### **Problema:**
-- Gradle version mismatch
-- Android SDK version conflicts
-- Java compatibility issues
-
-### **Solución:**
-Versiones probadas y compatibles:
-
-```yaml
-Java: 17 (LTS)
-Android SDK: 34 (Stable)
-Gradle: 8.6.1 (Compatible)
-Capacitor: 6.1.2 (Latest)
-Node.js: 20 (LTS)
 ```
+> error: invalid source release: 21
+```
+
+### **Causa:**
+- Capacitor configurado para Java 21
+- Workflow usando Java 17
+- Incompatibilidad de versiones de compilación
+
+### **Solución Implementada:**
+Workflow Ultimate con configuración forzada a Java 17:
+
+```gradle
+compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+}
+```
+
+### **Configuración Correcta:**
+- ✅ Java 17 (forzado en build.gradle)
+- ✅ Gradle 8.6 (compatible con Java 17)
+- ✅ Android SDK 34 (estable)
+- ✅ Capacitor 6.1.2 (configurado correctamente)
 
 ---
 
@@ -93,17 +103,23 @@ timeout-minutes: 60  # Robust
 ## Workflow Recomendado
 
 **Para máxima compatibilidad usar:**
-`build-apk-simple.yml`
+`build-apk-ultimate.yml` ⭐ **NUEVO - SOLUCIONA JAVA 21 ERROR**
 
 **Características:**
-- ✅ Licencias pre-aceptadas
-- ✅ Limpieza automática de plataforma
-- ✅ Versiones compatibles
-- ✅ Sin procesos interactivos
-- ✅ Timeout adecuado (45 min)
+- ✅ **Java 17 forzado** - Soluciona error "invalid source release: 21"
+- ✅ **Gradle 8.6** - Compatible con Java 17
+- ✅ **Configuración completa** - build.gradle personalizado
+- ✅ **Android Actions** - Setup automático de SDK
+- ✅ **Sin errores de compilación** - Configuración probada
+
+**Workflows Disponibles:**
+1. **build-apk-ultimate.yml** ⭐ **RECOMENDADO** - Corrige error Java
+2. **build-apk-final.yml** - Alternativa robusta
+3. **build-apk-simple.yml** - Licencias pre-aceptadas
+4. **build-apk.yml** - Workflow estándar
 
 **Resultado esperado:**
 - APK de ~15-20 MB
 - Compatible Android 7.0+
 - Descarga desde GitHub Artifacts
-- Instalación directa en dispositivo
+- Sin errores de versiones Java
