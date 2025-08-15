@@ -79,36 +79,32 @@ jobs:
     - name: Update Android configuration
       run: |
         # Update variables.gradle for compatibility
-        cat > android/variables.gradle << 'EOF'
-        ext {
-            minSdkVersion = 23
-            compileSdkVersion = 34
-            targetSdkVersion = 34
-            androidxActivityVersion = '1.9.2'
-            androidxAppCompatVersion = '1.7.0'
-            androidxCoordinatorLayoutVersion = '1.2.0'
-            androidxCoreVersion = '1.15.0'
-            androidxFragmentVersion = '1.8.5'
-            coreSplashScreenVersion = '1.0.1'
-            androidxWebkitVersion = '1.12.1'
-            junitVersion = '4.13.2'
-            androidxJunitVersion = '1.2.1'
-            androidxEspressoCoreVersion = '3.6.1'
-            cordovaAndroidVersion = '10.1.1'
-        }
-        EOF
+        echo 'ext {' > android/variables.gradle
+        echo '    minSdkVersion = 23' >> android/variables.gradle
+        echo '    compileSdkVersion = 34' >> android/variables.gradle
+        echo '    targetSdkVersion = 34' >> android/variables.gradle
+        echo '    androidxActivityVersion = "1.9.2"' >> android/variables.gradle
+        echo '    androidxAppCompatVersion = "1.7.0"' >> android/variables.gradle
+        echo '    androidxCoordinatorLayoutVersion = "1.2.0"' >> android/variables.gradle
+        echo '    androidxCoreVersion = "1.15.0"' >> android/variables.gradle
+        echo '    androidxFragmentVersion = "1.8.5"' >> android/variables.gradle
+        echo '    coreSplashScreenVersion = "1.0.1"' >> android/variables.gradle
+        echo '    androidxWebkitVersion = "1.12.1"' >> android/variables.gradle
+        echo '    junitVersion = "4.13.2"' >> android/variables.gradle
+        echo '    androidxJunitVersion = "1.2.1"' >> android/variables.gradle
+        echo '    androidxEspressoCoreVersion = "3.6.1"' >> android/variables.gradle
+        echo '    cordovaAndroidVersion = "10.1.1"' >> android/variables.gradle
+        echo '}' >> android/variables.gradle
         
         # Update build.gradle
-        sed -i 's/com.android.tools.build:gradle:[^"']*/com.android.tools.build:gradle:8.6.1/' android/build.gradle
+        sed -i 's/com.android.tools.build:gradle:[^"'"'"']*/com.android.tools.build:gradle:8.6.1/' android/build.gradle
         
         # Update gradle.properties
-        cat > android/gradle.properties << 'EOF'
-        org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
-        org.gradle.daemon=false
-        org.gradle.parallel=false
-        android.useAndroidX=true
-        android.enableJetifier=true
-        EOF
+        echo 'org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m' > android/gradle.properties
+        echo 'org.gradle.daemon=false' >> android/gradle.properties
+        echo 'org.gradle.parallel=false' >> android/gradle.properties
+        echo 'android.useAndroidX=true' >> android/gradle.properties
+        echo 'android.enableJetifier=true' >> android/gradle.properties
         
     - name: Sync Capacitor
       run: |
