@@ -1,0 +1,136 @@
+name: Build Android APK (Simple)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Android SDK with pre-accepted licenses
+      run: |
+        # Create license directory with pre-accepted licenses
+        mkdir -p $HOME/android-sdk/licenses
+        
+        # Pre-accept all common Android licenses
+        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $HOME/android-sdk/licenses/android-sdk-license
+        echo "84831b9409646a918e30573bab4c9c91346d8abd" > $HOME/android-sdk/licenses/android-sdk-preview-license
+        echo "d975f751698a77b662f1254ddbeed3901e976f5a" > $HOME/android-sdk/licenses/intel-android-extra-license
+        echo "601085b94cd77f0b54ff86406957099ebe79c4d6" > $HOME/android-sdk/licenses/android-googletv-license
+        echo "33b6a2b64607f11b759f320ef9dff4ae5c47d97a" > $HOME/android-sdk/licenses/google-gdk-license
+        echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/android-sdk/licenses/mips-android-sysimage-license
+        
+        # Set Android SDK environment
+        echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+        echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        
+        # Download and install Android SDK tools
+        cd $HOME
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip -q commandlinetools-linux-11076708_latest.zip
+        mkdir -p android-sdk/cmdline-tools
+        mv cmdline-tools android-sdk/cmdline-tools/latest
+        
+        # Install required packages
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --update
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+        
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+      
+    - name: Build web app
+      run: npm run build
+      
+    - name: Install Capacitor
+      run: |
+        npm install -g @capacitor/cli@6.1.2
+        npx cap --version
+        
+    - name: Add Android platform
+      run: npx cap add android
+      
+    - name: Update Android configuration
+      run: |
+        # Update variables.gradle for compatibility
+        cat > android/variables.gradle << 'EOF'
+        ext {
+            minSdkVersion = 23
+            compileSdkVersion = 34
+            targetSdkVersion = 34
+            androidxActivityVersion = '1.9.2'
+            androidxAppCompatVersion = '1.7.0'
+            androidxCoordinatorLayoutVersion = '1.2.0'
+            androidxCoreVersion = '1.15.0'
+            androidxFragmentVersion = '1.8.5'
+            coreSplashScreenVersion = '1.0.1'
+            androidxWebkitVersion = '1.12.1'
+            junitVersion = '4.13.2'
+            androidxJunitVersion = '1.2.1'
+            androidxEspressoCoreVersion = '3.6.1'
+            cordovaAndroidVersion = '10.1.1'
+        }
+        EOF
+        
+        # Update build.gradle
+        sed -i 's/com.android.tools.build:gradle:[^"']*/com.android.tools.build:gradle:8.6.1/' android/build.gradle
+        
+        # Update gradle.properties
+        cat > android/gradle.properties << 'EOF'
+        org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
+        org.gradle.daemon=false
+        org.gradle.parallel=false
+        android.useAndroidX=true
+        android.enableJetifier=true
+        EOF
+        
+    - name: Sync Capacitor
+      run: |
+        npx cap copy android
+        npx cap sync android
+        
+    - name: Build APK
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew clean assembleDebug --no-daemon --stacktrace
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: AqueoDiario-APK-v${{ github.run_number }}
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
+        
+    - name: Build Summary
+      run: |
+        APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+        if [ -f "$APK_PATH" ]; then
+          SIZE=$(du -h "$APK_PATH" | cut -f1)
+          echo "✅ APK built successfully!"
+          echo "📱 Size: $SIZE"
+          echo "🔗 Download from Actions → Artifacts"
+        else
+          echo "❌ APK build failed"
+          exit 1
+        fi

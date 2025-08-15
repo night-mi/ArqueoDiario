@@ -11,12 +11,13 @@ Hemos reconstruido completamente el sistema de compilación APK con DOBLE WORKFL
 - **Node.js 20** - Última versión LTS
 - **Gradle 8.6.1** - Versión compatible
 
-### ✅ **Doble Sistema de Compilación:**
-- **Workflow Principal** - build-apk.yml (acción automática)
+### ✅ **Triple Sistema de Compilación:**
+- **Workflow Simple** - build-apk-simple.yml (licencias pre-aceptadas) ⭐ RECOMENDADO
+- **Workflow Principal** - build-apk.yml (acción automática)  
 - **Workflow Robusto** - build-apk-robust.yml (instalación manual SDK)
-- **Licencias Automáticas** - Sin interacción manual requerida
-- **Timeout Extendido** - 60 minutos para compilaciones complejas
-- **Logging Detallado** - Debugging completo de errores
+- **Licencias Pre-aceptadas** - Sin procesos interactivos que se cuelguen
+- **SDK Manual** - Control total del proceso de instalación
+- **Múltiples Fallbacks** - Si un workflow falla, otros disponibles
 
 ---
 
