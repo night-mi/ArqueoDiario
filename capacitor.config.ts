@@ -5,15 +5,14 @@ const config: CapacitorConfig = {
   appName: 'AqueoDiario',
   webDir: 'dist/public',
   server: {
-    androidScheme: 'https',
-    cleartext: true
+    androidScheme: 'https'
   },
   android: {
     allowMixedContent: true
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0,
+      launchShowDuration: 1000,
       backgroundColor: '#3498db',
       showSpinner: false
     },

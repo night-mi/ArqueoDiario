@@ -10,102 +10,144 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       
-    - name: Setup Node.js
+    - name: Setup Node.js 20
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '20'
         cache: 'npm'
         
-    - name: Setup Java
+    - name: Setup Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21'
+        java-version: '17'
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
+        cmdline-tools-version: '11076708'
         packages: |
           platform-tools
-          platforms;android-35
-          build-tools;35.0.0
-          cmdline-tools;latest
-        
+          platforms;android-34
+          build-tools;34.0.0
+          
     - name: Accept Android SDK licenses
-      run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
-      
-    - name: Clean npm cache
-      run: npm cache clean --force
+      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
       
     - name: Install dependencies
       run: |
         npm ci --legacy-peer-deps
-        npm ls --depth=0
-      
-    - name: Verify Capacitor installation
-      run: |
-        npm install -g @capacitor/cli@latest
-        npx cap --version
         
     - name: Build web application
       run: |
         npm run build
         ls -la dist/
+        
+    - name: Install Capacitor CLI
+      run: npm install -g @capacitor/cli@6.1.2
       
-    - name: Configure Capacitor
+    - name: Update Capacitor configuration
+      run: |
+        echo "import type { CapacitorConfig } from '@capacitor/cli';
+
+        const config: CapacitorConfig = {
+          appId: 'com.gasolinera.arqueos',
+          appName: 'AqueoDiario',
+          webDir: 'dist/public',
+          server: {
+            androidScheme: 'https'
+          },
+          android: {
+            allowMixedContent: true
+          },
+          plugins: {
+            SplashScreen: {
+              launchShowDuration: 1000,
+              backgroundColor: '#3498db',
+              showSpinner: false
+            }
+          }
+        };
+
+        export default config;" > capacitor.config.ts
+        
+    - name: Update Android versions
+      run: |
+        mkdir -p android
+        echo "ext {
+            minSdkVersion = 23
+            compileSdkVersion = 34
+            targetSdkVersion = 34
+            androidxActivityVersion = '1.9.2'
+            androidxAppCompatVersion = '1.7.0'
+            androidxCoordinatorLayoutVersion = '1.2.0'
+            androidxCoreVersion = '1.15.0'
+            androidxFragmentVersion = '1.8.5'
+            coreSplashScreenVersion = '1.0.1'
+            androidxWebkitVersion = '1.12.1'
+            junitVersion = '4.13.2'
+            androidxJunitVersion = '1.2.1'
+            androidxEspressoCoreVersion = '3.6.1'
+            cordovaAndroidVersion = '10.1.1'
+        }" > android/variables.gradle
+        
+    - name: Initialize Capacitor Android
+      run: |
+        npx cap add android --no-open
+        
+    - name: Configure Android project
       run: |
         npx cap copy android
         npx cap sync android
         
-    - name: Verify Android project
+    - name: Set optimal Gradle properties
       run: |
-        ls -la android/
-        cat android/gradle.properties || echo "No gradle.properties found"
+        echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
+        org.gradle.daemon=false
+        org.gradle.parallel=false
+        org.gradle.caching=true
+        android.useAndroidX=true
+        android.enableJetifier=true
+        android.compileSdkVersion=34
+        android.targetSdkVersion=34" > android/gradle.properties
         
-    - name: Set Gradle properties
-      run: |
-        echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m" >> android/gradle.properties
-        echo "org.gradle.daemon=false" >> android/gradle.properties
-        echo "org.gradle.parallel=false" >> android/gradle.properties
-        echo "android.useAndroidX=true" >> android/gradle.properties
-        echo "android.enableJetifier=true" >> android/gradle.properties
-        
-    - name: Grant execute permission for gradlew
+    - name: Grant execute permission
       run: chmod +x android/gradlew
       
-    - name: Clean and build Android APK
+    - name: Build APK
       run: |
         cd android
-        ./gradlew clean
-        ./gradlew assembleDebug --no-daemon --stacktrace --info
+        ./gradlew clean assembleDebug --no-daemon --stacktrace
         
-    - name: Verify APK was created
+    - name: Verify APK creation
       run: |
         ls -la android/app/build/outputs/apk/debug/
-        file android/app/build/outputs/apk/debug/app-debug.apk
+        APK_SIZE=$(du -h android/app/build/outputs/apk/debug/app-debug.apk | cut -f1)
+        echo "APK Size: $APK_SIZE"
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: arqueos-gasolinera-debug-v${{ github.run_number }}
+        name: AqueoDiario-APK-v${{ github.run_number }}
         path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
         
-    - name: Build Summary
+    - name: Build Success Summary
       run: |
-        echo "✅ APK compilado exitosamente!"
-        echo "📱 Archivo: app-debug.apk"
-        echo "💾 Tamaño: $(du -h android/app/build/outputs/apk/debug/app-debug.apk | cut -f1)"
-        echo "🔗 Descargar desde: Actions > Workflow runs > Artifacts"
+        echo "🎉 APK Build Completed Successfully!"
+        echo "📱 App: AqueoDiario (Sistema de Arqueos)"
+        echo "💾 File: app-debug.apk"
+        echo "🔢 Version: v${{ github.run_number }}"
+        echo "📦 Size: $(du -h android/app/build/outputs/apk/debug/app-debug.apk | cut -f1)"
         echo ""
-        echo "📋 Para descargar:"
-        echo "1. Ve a la pestaña Actions de tu repositorio"
-        echo "2. Busca el workflow más reciente"
-        echo "3. Descarga el artifact 'arqueos-gasolinera-debug-v${{ github.run_number }}'"
-        echo "4. Instala en Android activando 'Fuentes desconocidas'"
+        echo "📋 Download Instructions:"
+        echo "1. Go to Actions tab in your repository"
+        echo "2. Click on this workflow run"
+        echo "3. Download 'AqueoDiario-APK-v${{ github.run_number }}'"
+        echo "4. Install on Android with 'Unknown Sources' enabled"
