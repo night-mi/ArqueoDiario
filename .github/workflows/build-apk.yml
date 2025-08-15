@@ -32,13 +32,11 @@ jobs:
       uses: android-actions/setup-android@v3
       with:
         cmdline-tools-version: '11076708'
+        accept-android-sdk-licenses: true
         packages: |
           platform-tools
           platforms;android-34
           build-tools;34.0.0
-          
-    - name: Accept Android SDK licenses
-      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
       
     - name: Install dependencies
       run: |
@@ -49,8 +47,12 @@ jobs:
         npm run build
         ls -la dist/
         
-    - name: Install Capacitor CLI
-      run: npm install -g @capacitor/cli@6.1.2
+    - name: Install Capacitor CLI and verify
+      run: |
+        npm install -g @capacitor/cli@6.1.2
+        npx cap --version
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "JAVA_HOME: $JAVA_HOME"
       
     - name: Update Capacitor configuration
       run: |
@@ -99,7 +101,7 @@ jobs:
         
     - name: Initialize Capacitor Android
       run: |
-        npx cap add android --no-open
+        npx cap add android
         
     - name: Configure Android project
       run: |
@@ -108,14 +110,15 @@ jobs:
         
     - name: Set optimal Gradle properties
       run: |
-        echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
-        org.gradle.daemon=false
-        org.gradle.parallel=false
-        org.gradle.caching=true
-        android.useAndroidX=true
-        android.enableJetifier=true
-        android.compileSdkVersion=34
-        android.targetSdkVersion=34" > android/gradle.properties
+        echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m" > android/gradle.properties
+        echo "org.gradle.daemon=false" >> android/gradle.properties
+        echo "org.gradle.parallel=false" >> android/gradle.properties
+        echo "org.gradle.caching=true" >> android/gradle.properties
+        echo "android.useAndroidX=true" >> android/gradle.properties
+        echo "android.enableJetifier=true" >> android/gradle.properties
+        echo "android.compileSdkVersion=34" >> android/gradle.properties
+        echo "android.targetSdkVersion=34" >> android/gradle.properties
+        cat android/gradle.properties
         
     - name: Grant execute permission
       run: chmod +x android/gradlew
@@ -123,7 +126,8 @@ jobs:
     - name: Build APK
       run: |
         cd android
-        ./gradlew clean assembleDebug --no-daemon --stacktrace
+        echo "Starting Gradle build..."
+        ./gradlew clean assembleDebug --no-daemon --stacktrace --info
         
     - name: Verify APK creation
       run: |

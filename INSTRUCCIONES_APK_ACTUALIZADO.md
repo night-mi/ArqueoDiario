@@ -2,7 +2,7 @@
 
 ## 🎯 Sistema Completamente Renovado
 
-Hemos reconstruido completamente el sistema de compilación APK con:
+Hemos reconstruido completamente el sistema de compilación APK con DOBLE WORKFLOW:
 
 ### ✅ **Versiones Optimizadas:**
 - **Capacitor 6.1.2** - Última versión estable
@@ -11,11 +11,12 @@ Hemos reconstruido completamente el sistema de compilación APK con:
 - **Node.js 20** - Última versión LTS
 - **Gradle 8.6.1** - Versión compatible
 
-### ✅ **Características del Nuevo Workflow:**
-- **Inicialización completa** - Crea proyecto Android desde cero
-- **Configuración automática** - Variables y propiedades optimizadas
-- **Compilación robusta** - Sin errores de compatibilidad
-- **Artifact directo** - Descarga sin permisos especiales
+### ✅ **Doble Sistema de Compilación:**
+- **Workflow Principal** - build-apk.yml (acción automática)
+- **Workflow Robusto** - build-apk-robust.yml (instalación manual SDK)
+- **Licencias Automáticas** - Sin interacción manual requerida
+- **Timeout Extendido** - 60 minutos para compilaciones complejas
+- **Logging Detallado** - Debugging completo de errores
 
 ---
 

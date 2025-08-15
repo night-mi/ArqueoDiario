@@ -1,0 +1,229 @@
+name: Build Android APK (Robust)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Android SDK (Manual)
+      run: |
+        # Download and setup Android SDK manually
+        export ANDROID_HOME=$HOME/android-sdk
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        cd $ANDROID_HOME/cmdline-tools
+        
+        # Download command line tools
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip -q commandlinetools-linux-11076708_latest.zip
+        mv cmdline-tools latest
+        
+        # Set PATH
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+        
+    - name: Accept SDK licenses automatically
+      run: |
+        # Accept all licenses automatically
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
+        
+    - name: Install Android packages
+      run: |
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+          "platform-tools" \
+          "platforms;android-34" \
+          "build-tools;34.0.0" \
+          "extras;android;m2repository" \
+          "extras;google;m2repository"
+          
+    - name: Install dependencies
+      run: |
+        npm ci --legacy-peer-deps
+        
+    - name: Build web application
+      run: |
+        npm run build
+        ls -la dist/
+        echo "Web build completed successfully"
+        
+    - name: Install and verify Capacitor
+      run: |
+        npm install -g @capacitor/cli@6.1.2
+        npx cap --version
+        echo "Capacitor CLI installed successfully"
+        
+    - name: Create optimized Capacitor config
+      run: |
+        cat > capacitor.config.ts << 'EOF'
+        import type { CapacitorConfig } from '@capacitor/cli';
+
+        const config: CapacitorConfig = {
+          appId: 'com.gasolinera.arqueos',
+          appName: 'AqueoDiario',
+          webDir: 'dist/public',
+          server: {
+            androidScheme: 'https'
+          },
+          android: {
+            allowMixedContent: true
+          },
+          plugins: {
+            SplashScreen: {
+              launchShowDuration: 1000,
+              backgroundColor: '#3498db',
+              showSpinner: false
+            }
+          }
+        };
+
+        export default config;
+        EOF
+        
+    - name: Initialize Android project
+      run: |
+        npx cap add android
+        echo "Android project initialized"
+        
+    - name: Configure Android versions
+      run: |
+        # Update variables.gradle
+        cat > android/variables.gradle << 'EOF'
+        ext {
+            minSdkVersion = 23
+            compileSdkVersion = 34
+            targetSdkVersion = 34
+            androidxActivityVersion = '1.9.2'
+            androidxAppCompatVersion = '1.7.0'
+            androidxCoordinatorLayoutVersion = '1.2.0'
+            androidxCoreVersion = '1.15.0'
+            androidxFragmentVersion = '1.8.5'
+            coreSplashScreenVersion = '1.0.1'
+            androidxWebkitVersion = '1.12.1'
+            junitVersion = '4.13.2'
+            androidxJunitVersion = '1.2.1'
+            androidxEspressoCoreVersion = '3.6.1'
+            cordovaAndroidVersion = '10.1.1'
+        }
+        EOF
+        
+        # Update gradle.properties
+        cat > android/gradle.properties << 'EOF'
+        org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
+        org.gradle.daemon=false
+        org.gradle.parallel=false
+        org.gradle.caching=true
+        android.useAndroidX=true
+        android.enableJetifier=true
+        android.compileSdkVersion=34
+        android.targetSdkVersion=34
+        capacitor.android.allowModifyingPluginSDKVersions=true
+        EOF
+        
+    - name: Update build.gradle version
+      run: |
+        # Use compatible Gradle version
+        sed -i 's/classpath.*gradle.*/classpath "com.android.tools.build:gradle:8.6.1"/' android/build.gradle
+        echo "Build configuration updated"
+        
+    - name: Sync and copy project
+      run: |
+        npx cap copy android
+        npx cap sync android
+        echo "Project synced successfully"
+        
+    - name: Verify project structure
+      run: |
+        echo "=== Project Structure ==="
+        ls -la android/
+        echo "=== Gradle Wrapper ==="
+        ls -la android/gradlew*
+        echo "=== Variables ==="
+        cat android/variables.gradle
+        
+    - name: Set gradlew permissions
+      run: |
+        chmod +x android/gradlew
+        
+    - name: Build APK with verbose logging
+      run: |
+        cd android
+        echo "Starting APK build process..."
+        ./gradlew clean
+        ./gradlew assembleDebug --no-daemon --stacktrace --info
+        
+    - name: Verify and prepare APK
+      run: |
+        echo "=== Build Output ==="
+        find android/app/build/outputs -name "*.apk" -type f
+        ls -la android/app/build/outputs/apk/debug/
+        
+        APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+        if [ -f "$APK_PATH" ]; then
+          APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+          echo "✅ APK built successfully: $APK_SIZE"
+          
+          # Rename APK with timestamp
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          cp "$APK_PATH" "AqueoDiario-${TIMESTAMP}-v${{ github.run_number }}.apk"
+        else
+          echo "❌ APK not found!"
+          exit 1
+        fi
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: AqueoDiario-APK-v${{ github.run_number }}
+        path: |
+          android/app/build/outputs/apk/debug/app-debug.apk
+          AqueoDiario-*.apk
+        retention-days: 30
+        
+    - name: Build Success Report
+      run: |
+        echo "🎉 BUILD SUCCESSFUL! 🎉"
+        echo ""
+        echo "📱 App: AqueoDiario - Sistema de Arqueos"
+        echo "🔢 Version: v${{ github.run_number }}"
+        echo "💾 Size: $(du -h android/app/build/outputs/apk/debug/app-debug.apk | cut -f1)"
+        echo "📅 Build Date: $(date)"
+        echo ""
+        echo "📦 Download Instructions:"
+        echo "1. Go to GitHub repository → Actions tab"
+        echo "2. Click on this workflow run (should show ✅)"
+        echo "3. Scroll down to 'Artifacts' section"
+        echo "4. Download 'AqueoDiario-APK-v${{ github.run_number }}'"
+        echo "5. Extract the ZIP file to get app-debug.apk"
+        echo ""
+        echo "📱 Installation:"
+        echo "1. Transfer APK to Android device"
+        echo "2. Enable 'Unknown Sources' in Settings → Security"
+        echo "3. Install the APK file"
+        echo "4. Enjoy your offline cash reconciliation system!"
+        echo ""
+        echo "✅ Compatible with Android 7.0+ (API 23+)"
+        echo "✅ Fully offline functionality"
+        echo "✅ Professional reporting system"
