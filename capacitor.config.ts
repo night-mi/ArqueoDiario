@@ -2,14 +2,30 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.gasolinera.arqueos',
-  appName: 'Arqueos Gasolinera',
+  appName: 'AqueoDiario',
   webDir: 'dist/public',
+  bundledWebRuntime: false,
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    cleartext: true
+  },
+  android: {
+    buildOptions: {
+      keystorePath: undefined,
+      keystoreAlias: undefined,
+      releaseType: 'debug'
+    },
+    allowMixedContent: true
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0
+      launchShowDuration: 0,
+      backgroundColor: '#3498db',
+      showSpinner: false
+    },
+    StatusBar: {
+      style: 'dark',
+      backgroundColor: '#3498db'
     }
   }
 };

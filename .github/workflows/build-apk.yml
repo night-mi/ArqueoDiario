@@ -9,7 +9,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
     
     steps:
     - name: Checkout repository
@@ -18,7 +19,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '20.x'
         cache: 'npm'
         
     - name: Setup Java
@@ -29,45 +30,80 @@ jobs:
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
+      with:
+        api-level: 35
+        target: android-35
+        arch: x86_64
+        
+    - name: Accept Android SDK licenses
+      run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+      
+    - name: Clean npm cache
+      run: npm cache clean --force
       
     - name: Install dependencies
-      run: npm ci
+      run: |
+        npm ci --legacy-peer-deps
+        npm ls --depth=0
       
+    - name: Verify Capacitor installation
+      run: |
+        npm install -g @capacitor/cli@latest
+        npx cap --version
+        
     - name: Build web application
-      run: npm run build
+      run: |
+        npm run build
+        ls -la dist/
       
-    - name: Install Capacitor CLI
-      run: npm install -g @capacitor/cli@latest
-      
-    - name: Copy web assets to Android
-      run: npx cap copy android
-      
-    - name: Sync Capacitor
-      run: npx cap sync android
-      
+    - name: Configure Capacitor
+      run: |
+        npx cap copy android --no-build
+        npx cap sync android --no-build
+        
+    - name: Verify Android project
+      run: |
+        ls -la android/
+        cat android/gradle.properties || echo "No gradle.properties found"
+        
+    - name: Set Gradle properties
+      run: |
+        echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m" >> android/gradle.properties
+        echo "org.gradle.daemon=false" >> android/gradle.properties
+        echo "org.gradle.parallel=false" >> android/gradle.properties
+        echo "android.useAndroidX=true" >> android/gradle.properties
+        echo "android.enableJetifier=true" >> android/gradle.properties
+        
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
       
-    - name: Build Android APK
+    - name: Clean and build Android APK
       run: |
         cd android
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew clean
+        ./gradlew assembleDebug --no-daemon --stacktrace --info
+        
+    - name: Verify APK was created
+      run: |
+        ls -la android/app/build/outputs/apk/debug/
+        file android/app/build/outputs/apk/debug/app-debug.apk
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: arqueos-gasolinera-debug
+        name: arqueos-gasolinera-debug-v${{ github.run_number }}
         path: android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
         
     - name: Create Release (if on main branch)
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: v${{ github.run_number }}
-        release_name: AqueoDiario v${{ github.run_number }}
+        name: AqueoDiario v${{ github.run_number }}
         body: |
           📱 Nueva versión de AqueoDiario - Sistema de Arqueos
           
@@ -83,17 +119,10 @@ jobs:
           2. Habilitar "Fuentes desconocidas" en Android
           3. Instalar la aplicación
           
-          **Compatible con:** Android 7.0 o superior
+          **Tamaño:** ~15-20 MB
+          **Compatible con:** Android 7.0 o superior (API 23+)
+          **Última actualización:** ${{ github.event.head_commit.timestamp }}
         draft: false
         prerelease: false
-        
-    - name: Upload APK to Release
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: android/app/build/outputs/apk/debug/app-debug.apk
-        asset_name: AqueoDiario-v${{ github.run_number }}.apk
-        asset_content_type: application/vnd.android.package-archive
+        files: |
+          android/app/build/outputs/apk/debug/app-debug.apk
