@@ -58,8 +58,8 @@ jobs:
       
     - name: Configure Capacitor
       run: |
-        npx cap copy android --no-build
-        npx cap sync android --no-build
+        npx cap copy android
+        npx cap sync android
         
     - name: Verify Android project
       run: |

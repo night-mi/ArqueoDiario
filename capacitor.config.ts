@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
     buildOptions: {
       keystorePath: undefined,
       keystoreAlias: undefined,
-      releaseType: 'debug'
+      releaseType: 'APK'
     },
     allowMixedContent: true
   },
