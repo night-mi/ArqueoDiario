@@ -1528,4 +1528,526 @@ Este código incluye:
 
 ---
 
-*ArqueoDiario v1.0 - Sistema profesional para estaciones de servicio*
+---
+
+## 🛡️ 12. Mejoras de Seguridad y Calidad
+
+### Middleware de errores mejorado - server/middleware/error-handler.ts
+```typescript
+import { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
+
+export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+  // Zod validation errors
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      message: 'Validation error',
+      errors: err.flatten(),
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Known API errors
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      message: err.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Server errors
+  const status = (err as any).status || 500;
+  const message = process.env.NODE_ENV === 'production' 
+    ? 'Internal server error' 
+    : err.message;
+
+  console.error('Error:', err);
+  
+  res.status(status).json({
+    message,
+    timestamp: new Date().toISOString(),
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+  });
+}
+```
+
+### Variables de entorno - .env.example
+```bash
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# Security
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5000
+JWT_SECRET=your-secret-key-here
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Features
+ENABLE_DEBUG_LOGS=true
+ENABLE_SWAGGER=true
+
+# App Info
+APP_NAME=ArqueoDiario
+APP_VERSION=1.0.0
+```
+
+### Configuración de seguridad - server/middleware/security.ts
+```typescript
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import helmet from 'helmet';
+
+export const rateLimiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+  message: {
+    error: 'Too many requests from this IP, please try again later.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+export const helmetConfig = {
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+};
+```
+
+---
+
+## 🧪 13. Testing Configuración
+
+### Configuración Vitest - vitest.config.ts
+```typescript
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./client/src/test/setup.ts'],
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname, './client/src'),
+      '@shared': path.resolve(import.meta.dirname, './shared'),
+    },
+  },
+});
+```
+
+### Setup de testing - client/src/test/setup.ts
+```typescript
+import '@testing-library/jest-dom';
+import { beforeAll, afterEach, afterAll } from 'vitest';
+import { setupServer } from 'msw/node';
+import { rest } from 'msw';
+
+// Mock server para API calls
+export const server = setupServer(
+  rest.get('/api/cash-boxes', (req, res, ctx) => {
+    return res(ctx.json([]));
+  }),
+  rest.post('/api/cash-boxes', (req, res, ctx) => {
+    return res(ctx.json({ id: 'test-id', ...req.body }));
+  }),
+);
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+```
+
+### Test ejemplo - client/src/components/__tests__/cash-reconciliation-wizard.test.tsx
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import CashReconciliationWizard from '../cash-reconciliation-wizard';
+import { ReconciliationProvider } from '@/context/reconciliation-context';
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+const TestWrapper = ({ children }: { children: React.ReactNode }) => {
+  const queryClient = createTestQueryClient();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ReconciliationProvider>
+        {children}
+      </ReconciliationProvider>
+    </QueryClientProvider>
+  );
+};
+
+describe('CashReconciliationWizard', () => {
+  it('renders initial step correctly', () => {
+    render(
+      <TestWrapper>
+        <CashReconciliationWizard />
+      </TestWrapper>
+    );
+
+    expect(screen.getByText('Sistema de Arqueos')).toBeInTheDocument();
+    expect(screen.getByText('Control amigable de cajas registradoras')).toBeInTheDocument();
+  });
+
+  it('shows reset confirmation dialog', () => {
+    const mockConfirm = vi.spyOn(window, 'confirm');
+    mockConfirm.mockImplementation(() => true);
+
+    render(
+      <TestWrapper>
+        <CashReconciliationWizard />
+      </TestWrapper>
+    );
+
+    const cancelButton = screen.getByTitle('Cancelar Arqueo');
+    fireEvent.click(cancelButton);
+
+    expect(mockConfirm).toHaveBeenCalledWith(
+      '¿Estás seguro de que quieres cancelar el arqueo? Se perderán todos los datos.'
+    );
+
+    mockConfirm.mockRestore();
+  });
+});
+```
+
+---
+
+## 📚 14. Documentación Mejorada
+
+### README.md completo
+```markdown
+# 📱 ArqueoDiario
+
+Sistema profesional de gestión de arqueos de caja para estaciones de servicio.
+
+## 🚀 Características
+
+- ✅ **Wizard de 5 pasos** - Proceso guiado completo
+- ✅ **Offline first** - Funciona sin conexión a internet  
+- ✅ **Reportes PDF** - Generación profesional de reportes
+- ✅ **Aplicación móvil** - APK para Android con Capacitor
+- ✅ **Gestión editable** - Nombres de trabajadores y auditores
+- ✅ **Diseño responsive** - Optimizado para móviles y escritorio
+- ✅ **TypeScript** - Tipado fuerte en todo el proyecto
+
+## 📋 Requisitos
+
+- Node.js 18+ 
+- npm 9+
+- Android Studio (para APK)
+
+## 🛠 Instalación
+
+1. **Clonar e instalar:**
+```bash
+git clone <repo-url>
+cd arqueo-diario
+npm install
+```
+
+2. **Configurar variables de entorno:**
+```bash
+cp .env.example .env
+# Editar .env con tus configuraciones
+```
+
+3. **Ejecutar en desarrollo:**
+```bash
+npm run dev
+```
+
+4. **Para producción:**
+```bash
+npm run build
+npm start
+```
+
+## 📱 Generar APK
+
+```bash
+# Build web
+npm run build
+
+# Sincronizar Capacitor
+npx cap sync android
+
+# Abrir Android Studio
+npx cap open android
+```
+
+## 🧪 Testing
+
+```bash
+# Ejecutar tests
+npm test
+
+# Coverage
+npm run test:coverage
+
+# Tests en modo watch
+npm run test:watch
+```
+
+## 📊 Scripts Disponibles
+
+- `npm run dev` - Servidor de desarrollo
+- `npm run build` - Build para producción
+- `npm run start` - Servidor de producción
+- `npm run check` - Type checking
+- `npm test` - Ejecutar tests
+- `npm run lint` - Linter
+- `npm run format` - Prettier
+
+## 🏗 Arquitectura
+
+```
+arqueo-diario/
+├── client/          # Frontend React + TypeScript
+├── server/          # Backend Express + TypeScript
+├── shared/          # Tipos compartidos
+├── android/         # Aplicación Android (Capacitor)
+└── docs/           # Documentación
+```
+
+## 🔧 Tecnologías
+
+**Frontend:**
+- React 18 + TypeScript
+- Tailwind CSS + Radix UI
+- TanStack Query
+- React Hook Form + Zod
+- Wouter (routing)
+
+**Backend:**
+- Express.js + TypeScript
+- Zod (validation)
+- In-memory storage
+
+**Mobile:**
+- Capacitor 6
+- Android SDK 35
+
+## 📄 Licencia
+
+MIT License - ver [LICENSE](LICENSE) para detalles.
+```
+
+### JSDoc examples mejorados
+```typescript
+/**
+ * Calcula el total de efectivo basado en el desglose de denominaciones
+ * @param breakdown - Objeto con denominaciones como claves y cantidades como valores
+ * @returns El total calculado en euros con precisión de 2 decimales
+ * @example
+ * ```typescript
+ * const breakdown = { "50": 2, "20": 5, "10": 3 };
+ * const total = calculateTotal(breakdown); // 160.00
+ * ```
+ */
+export function calculateTotal(breakdown: Record<number, number>): number {
+  return Object.entries(breakdown).reduce((total, [value, count]) => {
+    return total + (parseFloat(value) * count);
+  }, 0);
+}
+
+/**
+ * Genera un PDF con el reporte de arqueo por cajas
+ * @param cashBoxes - Array de cajas registradoras procesadas
+ * @param config - Configuración del reporte (fecha, auditor, etc.)
+ * @throws {Error} Cuando no se pueden procesar los datos
+ * @returns Promise que resuelve con el blob del PDF generado
+ */
+export async function generateCashBoxReport(
+  cashBoxes: CashBox[], 
+  config: ReportConfig
+): Promise<Blob> {
+  // Implementation...
+}
+```
+
+---
+
+## 🔄 15. Mejoras de Performance y UX
+
+### Skeleton Loading - client/src/components/ui/skeleton.tsx
+```typescript
+import { cn } from "@/lib/utils"
+
+function Skeleton({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn("animate-pulse rounded-md bg-muted", className)}
+      {...props}
+    />
+  )
+}
+
+export { Skeleton }
+```
+
+### Optimistic Updates ejemplo
+```typescript
+// En un componente
+const addCashBoxMutation = useMutation({
+  mutationFn: (cashBox: InsertCashBox) => apiRequest('/api/cash-boxes', {
+    method: 'POST',
+    body: JSON.stringify({ cashBoxes: [cashBox] })
+  }),
+  onMutate: async (newCashBox) => {
+    await queryClient.cancelQueries({ queryKey: ['cashBoxes'] });
+    const previousCashBoxes = queryClient.getQueryData(['cashBoxes']);
+    
+    queryClient.setQueryData(['cashBoxes'], (old: CashBox[] = []) => [
+      ...old,
+      { ...newCashBox, id: 'temp-' + Date.now(), createdAt: new Date() }
+    ]);
+    
+    return { previousCashBoxes };
+  },
+  onError: (err, newCashBox, context) => {
+    queryClient.setQueryData(['cashBoxes'], context?.previousCashBoxes);
+  },
+  onSettled: () => {
+    queryClient.invalidateQueries({ queryKey: ['cashBoxes'] });
+  },
+});
+```
+
+---
+
+## 📦 16. Package.json Mejorado
+
+```json
+{
+  "name": "arqueo-diario",
+  "version": "1.0.0",
+  "description": "Sistema profesional de arqueos de caja para estaciones de servicio",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "NODE_ENV=development tsx server/index.ts",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "start": "NODE_ENV=production node dist/index.js",
+    "check": "tsc --noEmit",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest --watch",
+    "lint": "eslint . --ext ts,tsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "type-check": "tsc --noEmit",
+    "cap:sync": "npx cap sync",
+    "cap:build": "npm run build && npx cap sync android",
+    "cap:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@hookform/resolvers": "^3.10.0",
+    "@radix-ui/react-accordion": "^1.2.4",
+    "@radix-ui/react-alert-dialog": "^1.1.7",
+    "@radix-ui/react-button": "^1.1.4",
+    "@radix-ui/react-checkbox": "^1.1.5",
+    "@radix-ui/react-dialog": "^1.1.7",
+    "@radix-ui/react-dropdown-menu": "^2.1.7",
+    "@radix-ui/react-label": "^2.1.3",
+    "@radix-ui/react-progress": "^1.1.3",
+    "@radix-ui/react-select": "^2.1.7",
+    "@radix-ui/react-separator": "^1.1.3",
+    "@radix-ui/react-slot": "^1.2.0",
+    "@radix-ui/react-tabs": "^1.1.4",
+    "@radix-ui/react-toast": "^1.2.7",
+    "@radix-ui/react-tooltip": "^1.2.0",
+    "@tanstack/react-query": "^5.60.5",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "date-fns": "^3.6.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "framer-motion": "^11.13.1",
+    "helmet": "^8.0.0",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
+    "lucide-react": "^0.453.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.55.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
+    "wouter": "^3.3.5",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "4.17.21",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "@vitest/coverage-v8": "^2.1.8",
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.18.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "jsdom": "^25.0.1",
+    "msw": "^2.6.8",
+    "postcss": "^8.4.47",
+    "prettier": "^3.4.2",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.1",
+    "typescript": "5.6.3",
+    "vite": "^5.4.19",
+    "vitest": "^2.1.8"
+  },
+  "keywords": ["arqueos", "caja", "gasolinera", "react", "typescript", "capacitor"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tu-usuario/arqueo-diario.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tu-usuario/arqueo-diario/issues"
+  },
+  "homepage": "https://github.com/tu-usuario/arqueo-diario#readme"
+}
+```
+
+---
+
+*ArqueoDiario v1.0 - Sistema profesional para estaciones de servicio*  
+*Mejorado con seguridad, testing y documentación profesional*
