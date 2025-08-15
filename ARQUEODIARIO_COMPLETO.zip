@@ -1,0 +1,247 @@
+# 📦 ArqueoDiario - Código Completo Para Copiar
+
+Sistema completo de gestión de arqueos de caja para gasolineras. Aquí tienes todos los archivos necesarios para recrear el proyecto completo.
+
+## 🚀 Instrucciones de Instalación
+
+### 1. Crear proyecto nuevo
+```bash
+mkdir arqueo-diario
+cd arqueo-diario
+npm init -y
+```
+
+### 2. Instalar dependencias principales
+```bash
+# Capacitor para móvil
+npm install @capacitor/core @capacitor/cli @capacitor/android
+
+# React y TypeScript
+npm install react react-dom @types/react @types/react-dom
+npm install @vitejs/plugin-react vite typescript
+
+# UI y estilos
+npm install @radix-ui/react-accordion @radix-ui/react-alert-dialog @radix-ui/react-button @radix-ui/react-checkbox @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-label @radix-ui/react-progress @radix-ui/react-select @radix-ui/react-separator @radix-ui/react-slot @radix-ui/react-tabs @radix-ui/react-toast
+npm install tailwindcss postcss autoprefixer tailwindcss-animate
+npm install class-variance-authority clsx tailwind-merge
+npm install lucide-react
+
+# Estado y formularios
+npm install @tanstack/react-query
+npm install react-hook-form @hookform/resolvers zod
+npm install wouter
+
+# Backend
+npm install express @types/express
+npm install tsx esbuild
+
+# Utilidades
+npm install date-fns jspdf jspdf-autotable
+npm install framer-motion
+```
+
+### 3. Configurar Tailwind
+```bash
+npx tailwindcss init -p
+```
+
+### 4. Inicializar Capacitor
+```bash
+npx cap init
+npx cap add android
+```
+
+---
+
+## 📁 ESTRUCTURA COMPLETA DEL PROYECTO
+
+```
+arqueo-diario/
+├── client/
+│   ├── index.html
+│   └── src/
+│       ├── App.tsx
+│       ├── main.tsx
+│       ├── index.css
+│       ├── components/
+│       │   ├── ui/                    # Componentes base
+│       │   ├── cash-reconciliation-wizard.tsx
+│       │   ├── cash-breakdown-form.tsx
+│       │   ├── name-manager.tsx
+│       │   ├── progress-indicator.tsx
+│       │   ├── step-configuration.tsx
+│       │   ├── step-cash-box-entry.tsx
+│       │   ├── step-validation.tsx
+│       │   ├── step-totals-summary.tsx
+│       │   └── step-report.tsx
+│       ├── context/
+│       │   └── reconciliation-context.tsx
+│       ├── hooks/
+│       │   ├── use-mobile.tsx
+│       │   └── use-toast.ts
+│       ├── lib/
+│       │   ├── denominations.ts
+│       │   ├── pdf-generator.ts
+│       │   ├── queryClient.ts
+│       │   └── utils.ts
+│       └── pages/
+│           ├── home.tsx
+│           └── not-found.tsx
+├── server/
+│   ├── index.ts
+│   ├── routes.ts
+│   ├── storage.ts
+│   ├── db.ts
+│   └── vite.ts
+├── shared/
+│   └── schema.ts
+├── android/                         # Generado por Capacitor
+├── package.json
+├── vite.config.ts
+├── tailwind.config.ts
+├── tsconfig.json
+├── capacitor.config.ts
+├── ionic.config.json
+├── appflow.config.json
+├── variables.gradle
+└── postcss.config.js
+```
+
+---
+
+## 📄 ARCHIVOS DE CONFIGURACIÓN
+
+### package.json
+```json
+{
+  "name": "arqueo-diario",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "NODE_ENV=development tsx server/index.ts",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "start": "NODE_ENV=production node dist/index.js",
+    "check": "tsc"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@hookform/resolvers": "^3.10.0",
+    "@radix-ui/react-accordion": "^1.2.4",
+    "@radix-ui/react-alert-dialog": "^1.1.7",
+    "@radix-ui/react-button": "^1.1.4",
+    "@radix-ui/react-checkbox": "^1.1.5",
+    "@radix-ui/react-dialog": "^1.1.7",
+    "@radix-ui/react-dropdown-menu": "^2.1.7",
+    "@radix-ui/react-label": "^2.1.3",
+    "@radix-ui/react-progress": "^1.1.3",
+    "@radix-ui/react-select": "^2.1.7",
+    "@radix-ui/react-separator": "^1.1.3",
+    "@radix-ui/react-slot": "^1.2.0",
+    "@radix-ui/react-tabs": "^1.1.4",
+    "@radix-ui/react-toast": "^1.2.7",
+    "@radix-ui/react-tooltip": "^1.2.0",
+    "@tanstack/react-query": "^5.60.5",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "express": "^4.21.2",
+    "framer-motion": "^11.13.1",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
+    "lucide-react": "^0.453.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.55.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
+    "wouter": "^3.3.5",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/express": "4.17.21",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.25.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.1",
+    "typescript": "5.6.3",
+    "vite": "^5.4.19"
+  }
+}
+```
+
+---
+
+## 🌐 FRONTEND PRINCIPAL
+
+### client/index.html
+```html
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>ArqueoDiario - Gestión de Arqueos de Caja</title>
+    <meta name="description" content="Sistema profesional para gestión de arqueos de caja en estaciones de servicio" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+### client/src/main.tsx
+```typescript
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(<App />);
+```
+
+### client/src/App.tsx
+```typescript
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import NotFound from "@/pages/not-found";
+import Home from "@/pages/home";
+import { ReconciliationProvider } from "@/context/reconciliation-context";
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={Home}/>
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ReconciliationProvider>
+          <Toaster />
+          <Router />
+        </ReconciliationProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
+```
+
+---
+
+## 📄 Continúo con los componentes principales...
