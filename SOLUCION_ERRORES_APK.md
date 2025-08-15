@@ -103,20 +103,23 @@ timeout-minutes: 60  # Robust
 ## Workflow Recomendado
 
 **Para máxima compatibilidad usar:**
-`build-apk-ultimate.yml` ⭐ **NUEVO - SOLUCIONA JAVA 21 ERROR**
+`build-apk-debug.yml` ⭐ **NUEVO - DEBUGGING COMPLETO**
 
 **Características:**
-- ✅ **Java 17 forzado** - Soluciona error "invalid source release: 21"
-- ✅ **Gradle 8.6** - Compatible con Java 17
-- ✅ **Configuración completa** - build.gradle personalizado
-- ✅ **Android Actions** - Setup automático de SDK
-- ✅ **Sin errores de compilación** - Configuración probada
+- ✅ **Logging detallado** - Debug completo de cada paso
+- ✅ **Java 17 forzado** - Soluciona error "invalid source release: 21" 
+- ✅ **Gradle 8.1.1** - Versión más estable con Java 17
+- ✅ **SDK manual** - Control total del proceso de instalación
+- ✅ **Configuración step-by-step** - Cada paso verificado
+- ✅ **Manejo de errores** - Continúa aunque falle un paso
+- ✅ **60 min timeout** - Máximo tiempo disponible
 
 **Workflows Disponibles:**
-1. **build-apk-ultimate.yml** ⭐ **RECOMENDADO** - Corrige error Java
-2. **build-apk-final.yml** - Alternativa robusta
-3. **build-apk-simple.yml** - Licencias pre-aceptadas
-4. **build-apk.yml** - Workflow estándar
+1. **build-apk-debug.yml** ⭐ **NUEVO RECOMENDADO** - Logging completo y debugging
+2. **build-apk-ultimate.yml** - Corrige error Java 21
+3. **build-apk-final.yml** - Alternativa robusta
+4. **build-apk-simple.yml** - Licencias pre-aceptadas
+5. **build-apk.yml** - Workflow estándar
 
 **Resultado esperado:**
 - APK de ~15-20 MB

@@ -1,0 +1,286 @@
+name: Build Android APK (Debug)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Debug Environment
+      run: |
+        echo "=== Environment Debug ==="
+        java -version
+        javac -version
+        node -v
+        npm -v
+        echo "JAVA_HOME: $JAVA_HOME"
+        echo "PATH: $PATH"
+        
+    - name: Setup Android SDK (Manual)
+      run: |
+        export ANDROID_HOME=$HOME/android-sdk
+        export ANDROID_SDK_ROOT=$ANDROID_HOME
+        mkdir -p $ANDROID_HOME/licenses $ANDROID_HOME/cmdline-tools
+        
+        # Environment variables
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+        
+        # Pre-accept all licenses with comprehensive list
+        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license
+        echo "84831b9409646a918e30573bab4c9c91346d8abd" > $ANDROID_HOME/licenses/android-sdk-preview-license
+        echo "601085b94cd77f0b54ff86406957099ebe79c4d6" > $ANDROID_HOME/licenses/android-googletv-license
+        echo "33b6a2b64607f11b759f320ef9dff4ae5c47d97a" > $ANDROID_HOME/licenses/google-gdk-license
+        echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $ANDROID_HOME/licenses/mips-android-sysimage-license
+        echo "d975f751698a77b662f1254ddbeed3901e976f5a" > $ANDROID_HOME/licenses/intel-android-extra-license
+        
+        # Download cmdline tools
+        cd $ANDROID_HOME/cmdline-tools
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip -q commandlinetools-linux-11076708_latest.zip
+        mv cmdline-tools latest
+        
+        # Install packages
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --update
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+        
+    - name: Install NPM Dependencies
+      run: |
+        echo "=== Installing Dependencies ==="
+        npm ci --legacy-peer-deps --verbose
+        
+    - name: Build Web Application
+      run: |
+        echo "=== Building Web App ==="
+        npm run build
+        ls -la dist/
+        
+    - name: Install Capacitor CLI
+      run: |
+        echo "=== Installing Capacitor ==="
+        npm install -g @capacitor/cli@6.1.2
+        npx cap --version
+        
+    - name: Remove Existing Android Platform
+      run: |
+        echo "=== Cleaning Android Platform ==="
+        if [ -d "android" ]; then
+          echo "Removing existing android directory..."
+          rm -rf android
+        fi
+        
+    - name: Add Android Platform
+      run: |
+        echo "=== Adding Android Platform ==="
+        npx cap add android
+        ls -la android/
+        
+    - name: Create Custom Build Configuration
+      run: |
+        echo "=== Creating Build Configuration ==="
+        
+        # Root build.gradle
+        cat > android/build.gradle << 'EOF'
+buildscript {
+    ext.kotlin_version = '1.9.10'
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.4'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://www.jitpack.io' }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+EOF
+
+        # App build.gradle with forced Java 17
+        cat > android/app/build.gradle << 'EOF'
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.gasolinera.arqueos"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    defaultConfig {
+        applicationId "com.gasolinera.arqueos"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             additionalParameters '--no-version-vectors'
+        }
+    }
+    
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.core:core:$androidxCoreVersion"
+    implementation "androidx.fragment:fragment:$androidxFragmentVersion"
+    implementation "androidx.activity:activity:$androidxActivityVersion"
+    implementation "androidx.webkit:webkit:$androidxWebkitVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation 'com.google.android.material:material:1.9.0'
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-android')
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+EOF
+
+        # Variables.gradle
+        cat > android/variables.gradle << 'EOF'
+ext {
+    minSdkVersion = 23
+    compileSdkVersion = 34
+    targetSdkVersion = 34
+    androidxActivityVersion = '1.8.0'
+    androidxAppCompatVersion = '1.6.1'
+    androidxCoordinatorLayoutVersion = '1.2.0'
+    androidxCoreVersion = '1.10.1'
+    androidxFragmentVersion = '1.6.1'
+    coreSplashScreenVersion = '1.0.1'
+    androidxWebkitVersion = '1.7.0'
+    junitVersion = '4.13.2'
+    androidxJunitVersion = '1.1.5'
+    androidxEspressoCoreVersion = '3.5.1'
+    cordovaAndroidVersion = '10.1.1'
+}
+EOF
+
+        # Gradle properties
+        cat > android/gradle.properties << 'EOF'
+org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
+org.gradle.daemon=false
+org.gradle.parallel=false
+android.useAndroidX=true
+android.enableJetifier=true
+android.defaults.buildfeatures.buildconfig=true
+android.nonTransitiveRClass=false
+android.nonFinalResIds=false
+EOF
+
+        # Gradle wrapper - force compatible version
+        mkdir -p android/gradle/wrapper
+        cat > android/gradle/wrapper/gradle-wrapper.properties << 'EOF'
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.1.1-all.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+EOF
+        
+    - name: Sync Capacitor
+      run: |
+        echo "=== Syncing Capacitor ==="
+        npx cap copy android
+        npx cap sync android
+        
+    - name: Debug Android Configuration
+      run: |
+        echo "=== Android Debug Info ==="
+        ls -la android/
+        echo "--- build.gradle ---"
+        head -20 android/build.gradle
+        echo "--- app/build.gradle ---"
+        head -30 android/app/build.gradle
+        echo "--- variables.gradle ---"
+        cat android/variables.gradle
+        
+    - name: Build APK with Detailed Logging
+      run: |
+        echo "=== Building APK ==="
+        cd android
+        chmod +x gradlew
+        echo "Starting Gradle build with debug info..."
+        ./gradlew clean --no-daemon --stacktrace --info
+        ./gradlew assembleDebug --no-daemon --stacktrace --info --warning-mode all
+        
+    - name: Check Build Output
+      run: |
+        echo "=== Build Output Check ==="
+        find android/ -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
+        ls -la android/app/build/outputs/ 2>/dev/null || echo "No outputs directory"
+        ls -la android/app/build/outputs/apk/ 2>/dev/null || echo "No APK directory"
+        ls -la android/app/build/outputs/apk/debug/ 2>/dev/null || echo "No debug APK directory"
+        
+    - name: Upload APK if exists
+      if: always()
+      run: |
+        APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+        if [ -f "$APK_PATH" ]; then
+          echo "APK found, preparing for upload"
+          ls -lh "$APK_PATH"
+        else
+          echo "APK not found at expected location"
+          find android/ -name "*.apk" -type f 2>/dev/null || echo "No APK files anywhere"
+        fi
+        
+    - name: Upload APK Artifact
+      if: success() && hashFiles('android/app/build/outputs/apk/debug/app-debug.apk') != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: AqueoDiario-Debug-APK-v${{ github.run_number }}
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
