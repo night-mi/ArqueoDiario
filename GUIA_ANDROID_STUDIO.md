@@ -86,10 +86,14 @@ android/app/build/outputs/apk/debug/app-debug.apk
 ## ⚠️ Problemas Comunes y Soluciones
 
 ### Error: "SDK location not found"
-**Solución:**
-1. Ve a File → Project Structure
-2. En "SDK Location", configura la ruta del Android SDK
-3. Normalmente es: `/Users/TuNombre/Library/Android/sdk` (Mac) o `C:\Users\TuNombre\AppData\Local\Android\Sdk` (Windows)
+**Solución (AUTOMÁTICA en Android Studio):**
+1. Android Studio detecta automáticamente el SDK al abrir el proyecto
+2. Si no: File → Project Structure → SDK Location
+3. Rutas típicas:
+   - **Windows**: `C:\Users\TuNombre\AppData\Local\Android\Sdk`
+   - **macOS**: `/Users/TuNombre/Library/Android/sdk`
+   - **Linux**: `/home/TuNombre/Android/Sdk`
+4. Android Studio configurará `android/local.properties` automáticamente
 
 ### Error: "Failed to find target"
 **Solución:**
