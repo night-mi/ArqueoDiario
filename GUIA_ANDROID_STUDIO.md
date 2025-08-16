@@ -111,6 +111,13 @@ android/app/build/outputs/apk/debug/app-debug.apk
 1. Ve a File → Invalidate Caches and Restart
 2. Selecciona "Invalidate and Restart"
 
+### Warning: "SDK XML versions up to 3 but version 4 encountered"
+**Es solo un aviso, NO un error:**
+- Tu APK se compilará perfectamente
+- No afecta el funcionamiento
+- Opcional: actualizar Android Studio en Help → Check for Updates
+- **Puedes ignorarlo completamente**
+
 ---
 
 ## 🎯 Verificar que Todo Funciona
