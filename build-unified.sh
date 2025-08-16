@@ -67,17 +67,18 @@ prepare_android() {
 compile_apk_local() {
     echo "🏗️ Compilando APK localmente..."
     
-    # Verificar Android SDK
-    if [ -z "$ANDROID_HOME" ]; then
-        echo "❌ ANDROID_HOME no configurado"
-        echo "📋 Pasos para configurar:"
+    # Ejecutar setup automático
+    echo "🔧 Ejecutando configuración automática..."
+    ./setup-android-studio.sh
+    
+    if [ $? -ne 0 ]; then
+        echo "❌ Error en la configuración automática"
+        echo "📋 Configuración manual requerida:"
         echo "1. Instalar Android Studio"
-        echo "2. export ANDROID_HOME=/path/to/Android/Sdk"
-        echo "3. export PATH=\$PATH:\$ANDROID_HOME/platform-tools"
+        echo "2. Configurar ANDROID_HOME"
+        echo "3. Ejecutar: ./setup-android-studio.sh"
         exit 1
     fi
-    
-    prepare_android
     
     echo "🔨 Compilando APK..."
     cd android
