@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Arqueos Gasolinera</string>
-    <string name="title_activity_main">Arqueos Gasolinera</string>
+    <string name="app_name">AqueoDiario</string>
+    <string name="title_activity_main">AqueoDiario</string>
     <string name="package_name">com.gasolinera.arqueos</string>
     <string name="custom_url_scheme">com.gasolinera.arqueos</string>
 </resources>
